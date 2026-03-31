@@ -1,4 +1,4 @@
-package io.drahlek.examplemod.platform.services;
+package io.drahlek.dirigo.platform.services;
 
 public interface IPlatformHelper {
 

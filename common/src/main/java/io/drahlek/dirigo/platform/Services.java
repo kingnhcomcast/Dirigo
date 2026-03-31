@@ -1,7 +1,7 @@
-package io.drahlek.examplemod.platform;
+package io.drahlek.dirigo.platform;
 
-import io.drahlek.examplemod.Constants;
-import io.drahlek.examplemod.platform.services.IPlatformHelper;
+import io.drahlek.dirigo.Constants;
+import io.drahlek.dirigo.platform.services.IPlatformHelper;
 
 import java.util.ServiceLoader;
 

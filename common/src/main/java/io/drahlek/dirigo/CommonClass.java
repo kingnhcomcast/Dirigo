@@ -1,6 +1,6 @@
-package io.drahlek.examplemod;
+package io.drahlek.dirigo;
 
-import io.drahlek.examplemod.platform.Services;
+import io.drahlek.dirigo.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Items;
 

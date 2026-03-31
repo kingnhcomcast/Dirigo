@@ -1,6 +1,6 @@
-package io.drahlek.examplemod.mixin;
+package io.drahlek.dirigo.mixin;
 
-import io.drahlek.examplemod.Constants;
+import io.drahlek.dirigo.Constants;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,6 +12,6 @@ public class ExampleMixin {
 	@Inject(at = @At("HEAD"), method = "loadLevel")
 	private void init(CallbackInfo info) {
 		// This code is injected into the start of MinecraftServer.loadLevel()V
-		Constants.LOG.info("Mixin NeoForge Main {}", Constants.MOD_NAME);
+		Constants.LOG.info("Mixin Fabric Main {}", Constants.MOD_NAME);
 	}
 }
