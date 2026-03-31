@@ -1,0 +1,108 @@
+plugins {
+    id 'multiloader-common'
+    id 'net.neoforged.moddev'
+}
+
+sourceSets {
+    main {
+        // Standard main source set
+    }
+    client {
+        java.srcDir 'src/client/java'
+        resources.srcDir 'src/client/resources'
+        // Allow client to see main
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    clientImplementation.extendsFrom(implementation)
+    clientCompileOnly.extendsFrom(compileOnly)
+    clientAnnotationProcessor.extendsFrom(annotationProcessor)
+    clientRuntimeOnly.extendsFrom(runtimeOnly)
+}
+
+neoForge {
+    enable {
+        neoFormVersion = neo_form_version
+        enabledSourceSets = [sourceSets.main, sourceSets.client] as Set
+    }
+
+    // Ensure both main and client get Minecraft dependencies on their classpaths.
+    addModdingDependenciesTo(sourceSets.main)
+    addModdingDependenciesTo(sourceSets.client)
+
+    def at = file('src/main/resources/META-INF/accesstransformer.cfg')
+    if (at.exists()) {
+        accessTransformers.from(at.absolutePath)
+    }
+    if (parchment_minecraft?.trim() && parchment_version?.trim()) {
+        parchment {
+            minecraftVersion = parchment_minecraft
+            mappingsVersion = parchment_version
+        }
+    }
+}
+
+repositories {
+    maven { url "https://maven.shedaniel.me/" }
+}
+
+// Ensure the dependencies are shared
+dependencies {
+    compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
+    compileOnly group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
+    annotationProcessor group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
+}
+
+// Link the client output to the main JAR for the loaders to pick up
+jar {
+    from sourceSets.main.output
+    from sourceSets.client.output
+}
+
+// Standard multi-loader attribute logic
+def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)
+sourceSets.all { set ->
+    configurations.named(set.compileClasspathConfigurationName) {
+        attributes.attribute(loaderAttribute, 'common')
+    }
+    configurations.named(set.runtimeClasspathConfigurationName) {
+        attributes.attribute(loaderAttribute, 'common')
+    }
+}
+
+configurations {
+    clientCompileClasspath.extendsFrom(compileClasspath)
+    clientRuntimeClasspath.extendsFrom(runtimeClasspath)
+
+    commonJava {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+    commonResources {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+    commonClientJava {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+    commonClientResources {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+
+artifacts {
+    // This points the loaders to the actual source files in common
+    commonJava sourceSets.main.java.sourceDirectories.singleFile
+    commonResources sourceSets.main.resources.sourceDirectories.singleFile
+    commonClientJava sourceSets.client.java.sourceDirectories.singleFile
+    commonClientResources sourceSets.client.resources.sourceDirectories.singleFile
+}
+
+tasks.named('processClientResources') {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
