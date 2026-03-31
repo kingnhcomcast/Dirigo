@@ -8,35 +8,19 @@
         "${mod_author}"
     ],
     "contact": {
-        "homepage": "https://github.com/kingnhcomcast/examplemod",
-        "sources": "https://github.com/kingnhcomcast/examplemod"
+        "homepage": "https://github.com/kingnhcomcast/dirigo",
+        "sources": "https://github.com/kingnhcomcast/dirigo"
     },
     "license": "${license}",
-    "icon": "assets/examplemod/icon.png",
+    "icon": "assets/dirigo/icon.png",
     "environment": "*",
     "entrypoints": {
         "main": [
-            "io.drahlek.examplemod.ExampleMod"
         ],
         "client": [
-            "io.drahlek.examplemod.ExamplemodClient"
         ]
     },
     "mixins": [
-        {
-            "config": "examplemod.common.client.mixins.json",
-            "environment": "client"
-        },
-        {
-            "config": "examplemod.fabric.client.mixins.json",
-            "environment": "client"
-        },
-        {
-            "config": "examplemod.fabric.mixins.json"
-        },
-        {
-            "config": "examplemod.common.main.mixins.json"
-        }
     ],
     "depends": {
         "fabricloader": ">=${fabric_loader_version}",

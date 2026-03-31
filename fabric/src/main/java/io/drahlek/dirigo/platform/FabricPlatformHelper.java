@@ -1,6 +1,6 @@
-package io.drahlek.examplemod.platform;
+package io.drahlek.dirigo.platform;
 
-import io.drahlek.examplemod.platform.services.IPlatformHelper;
+import io.drahlek.dirigo.platform.services.IPlatformHelper;
 import net.fabricmc.loader.api.FabricLoader;
 
 public class FabricPlatformHelper implements IPlatformHelper {
