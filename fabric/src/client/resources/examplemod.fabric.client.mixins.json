@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "io.drahlek.examplemod.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "FabricClientMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

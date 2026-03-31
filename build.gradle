@@ -1,0 +1,18 @@
+plugins {
+    // see https://fabricmc.net/develop/ for new versions
+    id 'net.fabricmc.fabric-loom' version '1.15-SNAPSHOT' apply false
+    // see https://projects.neoforged.net/neoforged/moddevgradle for new versions
+    id 'net.neoforged.moddev' version '2.0.140' apply false
+}
+
+subprojects {
+    tasks.withType(Checkstyle).configureEach {
+        // This stops Checkstyle from failing the build or logging missing Javadoc
+        enabled = false
+    }
+
+    tasks.withType(Javadoc).configureEach {
+        // This prevents the Javadoc tool from complaining about missing comments
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+}
