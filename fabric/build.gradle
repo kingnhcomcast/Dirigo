@@ -1,12 +1,23 @@
 plugins {
     id 'multiloader-loader'
-    id 'net.fabricmc.fabric-loom'
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
+
+group = project.group
+base {
+    archivesName = "Dirigo-fabric"
+}
+version = project.version
+
 dependencies {
+    def fabricDepConfig = configurations.findByName('modImplementation') != null ? 'modImplementation' : 'implementation'
+    if (fabricDepConfig == 'implementation') {
+        logger.warn('Fabric Loom not applied in this build context; falling back to implementation for Fabric deps.')
+    }
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-    implementation(project(":common"))
+    add(fabricDepConfig, "net.fabricmc:fabric-loader:${fabric_loader_version}")
+    add(fabricDepConfig, "net.fabricmc.fabric-api:fabric-api:${fabric_version}")
+    // common is wired in via multiloader-loader with the correct attributes
 }
 
 loom {

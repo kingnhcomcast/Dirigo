@@ -1,7 +1,14 @@
 plugins {
     id 'multiloader-common'
     id 'net.neoforged.moddev'
+    id 'java-library'
 }
+
+group = project.group
+base {
+    archivesName = "Dirigo-common"
+}
+version = project.version
 
 sourceSets {
     main {
@@ -46,14 +53,16 @@ neoForge {
 }
 
 repositories {
-    maven { url "https://maven.shedaniel.me/" }
+    mavenCentral()
 }
 
 // Ensure the dependencies are shared
 dependencies {
-    compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
-    compileOnly group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
-    annotationProcessor group: 'io.github.llamalad7', name: 'mixinextras-common', version: '0.3.5'
+    compileOnly "org.spongepowered:mixin:0.8.5"
+    compileOnly "io.github.llamalad7:mixinextras-common:0.3.5"
+    annotationProcessor "io.github.llamalad7:mixinextras-common:0.3.5"
+
+    api "org.reflections:reflections:${reflections_version}"
 }
 
 // Link the client output to the main JAR for the loaders to pick up

@@ -74,7 +74,7 @@ dependencies {
     commonClientJava project(path: ':common', configuration: 'commonClientJava')
     commonClientResources project(path: ':common', configuration: 'commonClientResources')
 
-    implementation project(':common')
+    // common is wired in via multiloader-loader with the correct attributes
 }
 
 
