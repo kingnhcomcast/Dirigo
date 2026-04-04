@@ -8,4 +8,5 @@ public class Constants {
 	public static final String MOD_ID = "dirigo";
 	public static final String MOD_NAME = "dirigo";
 	public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
+	public static final String GROUP = "io.drahlek.dirigo.mixin";
 }
