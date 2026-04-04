@@ -74,6 +74,8 @@ dependencies {
     commonClientJava project(path: ':common', configuration: 'commonClientJava')
     commonClientResources project(path: ':common', configuration: 'commonClientResources')
 
+    compileOnly "org.projectlombok:lombok:1.18.44"
+    annotationProcessor "org.projectlombok:lombok:1.18.44"
     // common is wired in via multiloader-loader with the correct attributes
 }
 

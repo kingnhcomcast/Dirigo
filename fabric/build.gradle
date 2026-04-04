@@ -3,23 +3,20 @@ plugins {
     id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
 
-group = project.group
-base {
-    archivesName = "Dirigo-fabric"
+repositories {
+    maven { url "https://maven.terraformersmc.com/releases/" }
+    maven { url "https://maven.nucleoid.xyz/" }
 }
-version = project.version
 
 dependencies {
-    def fabricDepConfig = configurations.findByName('modImplementation') != null ? 'modImplementation' : 'implementation'
-    if (fabricDepConfig == 'implementation') {
-        logger.warn('Fabric Loom not applied in this build context; falling back to implementation for Fabric deps.')
-    }
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    add(fabricDepConfig, "net.fabricmc:fabric-loader:${fabric_loader_version}")
-    add(fabricDepConfig, "net.fabricmc.fabric-api:fabric-api:${fabric_version}")
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+
+    api("com.terraformersmc:modmenu:18.0.0-alpha.7") { exclude(module: "fabric-api") }
+
     compileOnly "org.projectlombok:lombok:1.18.44"
     annotationProcessor "org.projectlombok:lombok:1.18.44"
-    // common is wired in via multiloader-loader with the correct attributes
 }
 
 loom {
@@ -52,15 +49,6 @@ loom {
     }
 }
 
-java {
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this line, sources will not be generated.
-    withSourcesJar()
-
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
-}
 // Implement mcgradleconventions loader attribute
 def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)
 ['apiElements', 'runtimeElements', 'sourcesElements', 'javadocElements', 'includeInternal', 'modCompileClasspath'].each { variant ->
@@ -80,12 +68,3 @@ sourceSets.configureEach {
     }
 }
 
-tasks.register("copyExtraJars", Copy) {
-    from("${projectDir}/extraJars")
-    include("*.jar")
-    into(project.file("runs/server/mods"))
-}
-
-tasks.named('runServer') {
-    dependsOn 'copyExtraJars'
-}
