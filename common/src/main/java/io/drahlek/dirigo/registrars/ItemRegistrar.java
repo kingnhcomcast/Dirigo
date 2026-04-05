@@ -11,7 +11,6 @@ import net.minecraft.world.item.CreativeModeTab;
 import org.reflections.Reflections;
 
 import java.util.Set;
-import java.util.function.Function;
 
 public class ItemRegistrar {
     /**
@@ -42,17 +41,6 @@ public class ItemRegistrar {
                         ? clazz.getSimpleName().toLowerCase()
                         : annotation.id();
 
-                // Construct a factory function for the item
-                Function<net.minecraft.world.item.Item.Properties, ? extends net.minecraft.world.item.Item> factory = props -> {
-                    try {
-                        // Assume the item class has a constructor that takes Item.Properties
-                        return (net.minecraft.world.item.Item) clazz.getConstructor(net.minecraft.world.item.Item.Properties.class)
-                                .newInstance(props);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Failed to instantiate item: " + clazz.getName(), e);
-                    }
-                };
-
                 //if a creative tab was provided, add it
                 ResourceKey<CreativeModeTab> resourceKey;
                 if(!annotation.creativeTab().isEmpty()) {
@@ -62,7 +50,7 @@ public class ItemRegistrar {
                 }
 
                 // Register in the Minecraft registries
-                registerItem(itemRegistrar, modId, id, clazz, factory, resourceKey);
+                registerItem(itemRegistrar, modId, id, clazz, resourceKey);
                 System.out.println("Registered item: " + modId + ":" + id);
 
             } catch (Exception e) {
@@ -77,14 +65,12 @@ public class ItemRegistrar {
             String modId,
             String id,
             Class<?> clazz,
-            Function<net.minecraft.world.item.Item.Properties, ? extends net.minecraft.world.item.Item> factory,
             ResourceKey<CreativeModeTab> resourceKey
     ) {
         itemRegistrar.registerItem(
                 modId,
                 id,
                 (Class<T>) clazz,
-                (Function<net.minecraft.world.item.Item.Properties, T>) factory,
                 resourceKey
         );
     }

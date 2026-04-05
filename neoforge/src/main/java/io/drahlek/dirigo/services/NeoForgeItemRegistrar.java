@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public class NeoForgeItemRegistrar implements IItemRegistrar {
     private static final Map<String, DeferredRegister.Items> ITEM_REGISTRIES = new HashMap<>();
@@ -31,9 +30,9 @@ public class NeoForgeItemRegistrar implements IItemRegistrar {
     }
 
     @Override
-    public <T extends Item> void registerItem(String modId, String name, Class<T> clazz, Function<Item.Properties, T> itemFactory, ResourceKey<CreativeModeTab> resourceKey) {
+    public <T extends Item> void registerItem(String modId, String name, Class<T> clazz, ResourceKey<CreativeModeTab> resourceKey) {
         DeferredRegister.Items items = getOrCreateRegistry(modId);
-        DeferredItem<Item> deferredItem = items.registerItem(name, itemFactory);
+        DeferredItem<Item> deferredItem = items.registerSimpleItem(name);
         ResourceKey<CreativeModeTab> tab = resourceKey != null ? resourceKey : CreativeModeTabs.COMBAT;
         TAB_ITEMS.computeIfAbsent(tab, key -> new ArrayList<>()).add(deferredItem);
     }

@@ -12,23 +12,25 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.Properties;
 
-import java.util.function.Function;
+import java.lang.reflect.InvocationTargetException;
 
 public class FabricItemRegistrar implements IItemRegistrar {
     //TODO do we add a custom creative tab just for this mod?
 
     @Override
-    public <T extends Item> void registerItem(String modId, String name, Class<T> clazz, Function<Item.Properties, T> itemFactory, ResourceKey<CreativeModeTab> resourceKey) {
+    public <T extends Item> void registerItem(String modId, String name, Class<T> clazz, ResourceKey<CreativeModeTab> resourceKey) {
         // Create the item key.
         ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(modId, name));
 
         // Set the item id before constructing the item (required by Item.Properties).
         try {
-            Properties properties = (Properties) clazz.getField("PROPERTIES").get(null);
+            Properties properties = new Properties();
             properties.setId(itemKey);
 
             // Create the item instance.
-            T item = itemFactory.apply(properties);
+            T item = clazz
+                    .getDeclaredConstructor(Properties.class)
+                    .newInstance(properties);
 
             // Register the item.
             //TODO do i need to save the key?
@@ -39,7 +41,7 @@ public class FabricItemRegistrar implements IItemRegistrar {
                 CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.COMBAT)
                         .register((itemGroup) -> itemGroup.accept(item));
           //  }
-        } catch (IllegalAccessException | NoSuchFieldException e) {
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
             throw new RuntimeException(e);
         }
     }
