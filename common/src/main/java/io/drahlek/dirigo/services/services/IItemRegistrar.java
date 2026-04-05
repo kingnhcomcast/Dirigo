@@ -1,4 +1,4 @@
-package io.drahlek.dirigo.platform.services;
+package io.drahlek.dirigo.services.services;
 
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;

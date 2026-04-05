@@ -1,6 +1,6 @@
-package io.drahlek.dirigo.platform;
+package io.drahlek.dirigo.services;
 
-import io.drahlek.dirigo.platform.services.IPlatformHelper;
+import io.drahlek.dirigo.services.services.IPlatformHelper;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLLoader;
 

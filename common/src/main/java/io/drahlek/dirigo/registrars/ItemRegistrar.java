@@ -2,12 +2,14 @@ package io.drahlek.dirigo.registrars;
 
 import io.drahlek.dirigo.annotation.Item;
 import io.drahlek.dirigo.Constants;
-import io.drahlek.dirigo.platform.services.IItemRegistrar;
+import io.drahlek.dirigo.services.Services;
+import io.drahlek.dirigo.services.services.IItemRegistrar;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
 import org.reflections.Reflections;
+
 import java.util.Set;
 import java.util.function.Function;
 
@@ -19,7 +21,9 @@ public class ItemRegistrar {
      * @param modId       The mod id to use for registration
      * @param packageName The package to scan (e.g., "com.mymod.item")
      */
-    public static void registerItems(IItemRegistrar itemRegistrar, String modId, String packageName) {
+    public static void registerItems(String modId, String packageName) {
+        IItemRegistrar itemRegistrar = Services.ITEM_REGISTRAR;
+
         // Scan only the specified package — much faster and safer
         Reflections reflections = new Reflections(packageName);
         Set<Class<?>> itemClasses = reflections.getTypesAnnotatedWith(Item.class);

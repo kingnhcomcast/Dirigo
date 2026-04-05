@@ -1,4 +1,4 @@
-package io.drahlek.dirigo.platform.services;
+package io.drahlek.dirigo.services.services;
 
 public interface IPlatformHelper {
 

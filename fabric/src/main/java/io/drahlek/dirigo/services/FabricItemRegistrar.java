@@ -1,6 +1,6 @@
 package io.drahlek.dirigo.services;
 
-import io.drahlek.dirigo.platform.services.IItemRegistrar;
+import io.drahlek.dirigo.services.services.IItemRegistrar;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
