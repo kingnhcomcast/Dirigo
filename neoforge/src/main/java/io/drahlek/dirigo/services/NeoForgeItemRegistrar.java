@@ -32,7 +32,19 @@ public class NeoForgeItemRegistrar implements IItemRegistrar {
     @Override
     public <T extends Item> void registerItem(String modId, String name, Class<T> clazz, ResourceKey<CreativeModeTab> resourceKey) {
         DeferredRegister.Items items = getOrCreateRegistry(modId);
-        DeferredItem<Item> deferredItem = items.registerSimpleItem(name);
+        DeferredItem<Item> deferredItem = items.registerItem(name, properties -> {
+            try {
+                return clazz.getDeclaredConstructor(Item.Properties.class).newInstance(properties);
+            } catch (NoSuchMethodException ignored) {
+                try {
+                    return clazz.getDeclaredConstructor().newInstance();
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to instantiate item: " + clazz.getName(), e);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to instantiate item: " + clazz.getName(), e);
+            }
+        });
         ResourceKey<CreativeModeTab> tab = resourceKey != null ? resourceKey : CreativeModeTabs.COMBAT;
         TAB_ITEMS.computeIfAbsent(tab, key -> new ArrayList<>()).add(deferredItem);
     }
