@@ -16,7 +16,7 @@
     "environment": "*",
     "entrypoints": {
         "main": [
-            "io.drahlek.dirigo.Dirigo"
+          "io.drahlek.dirigo.FabricDirigo"
         ]
     },
     "mixins": [

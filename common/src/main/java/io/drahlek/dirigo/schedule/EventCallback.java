@@ -1,4 +1,4 @@
-package io.drahlek.dirigo.event;
+package io.drahlek.dirigo.schedule;
 
 import io.drahlek.dirigo.Constants;
 

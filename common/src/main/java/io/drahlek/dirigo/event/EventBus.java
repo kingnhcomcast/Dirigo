@@ -1,6 +1,7 @@
 package io.drahlek.dirigo.event;
 
 import io.drahlek.dirigo.Constants;
+import io.drahlek.dirigo.schedule.EventCallback;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

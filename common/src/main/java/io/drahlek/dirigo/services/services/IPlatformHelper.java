@@ -1,5 +1,8 @@
 package io.drahlek.dirigo.services.services;
 
+
+import java.nio.file.Path;
+
 public interface IPlatformHelper {
 
     /**
@@ -33,4 +36,6 @@ public interface IPlatformHelper {
 
         return isDevelopmentEnvironment() ? "development" : "production";
     }
+
+    Path getConfigDirectory() ;
 }
