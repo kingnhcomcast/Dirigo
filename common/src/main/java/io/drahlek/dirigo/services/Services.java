@@ -1,6 +1,7 @@
 package io.drahlek.dirigo.services;
 
 import io.drahlek.dirigo.Constants;
+import io.drahlek.dirigo.services.services.IBlockRegistrar;
 import io.drahlek.dirigo.services.services.IItemRegistrar;
 import io.drahlek.dirigo.services.services.IPlatformHelper;
 
@@ -16,6 +17,7 @@ public class Services {
     // mod is loaded.
     public static final IPlatformHelper PLATFORM = load(IPlatformHelper.class);
     public static final IItemRegistrar ITEM_REGISTRAR = load(IItemRegistrar.class);
+    public static final IBlockRegistrar BLOCK_REGISTRAR = load(IBlockRegistrar.class);
 
     // This code is used to load a service for the current environment. Your implementation of the service must be defined
     // manually by including a text file in META-INF/services named with the fully qualified class name of the service.

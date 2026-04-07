@@ -37,22 +37,23 @@ public class ItemRegistrar {
             try {
                 // Get the annotation and derive ID
                 Item annotation = clazz.getAnnotation(Item.class);
-                String id = annotation.id().isEmpty()
-                        ? clazz.getSimpleName().toLowerCase()
-                        : annotation.id();
+                if(annotation != null) {
+                    String id = annotation.id().isEmpty()
+                            ? clazz.getSimpleName().toLowerCase()
+                            : annotation.id();
 
-                //if a creative tab was provided, add it
-                ResourceKey<CreativeModeTab> resourceKey;
-                if(!annotation.creativeTab().isEmpty()) {
-                    resourceKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace(annotation.creativeTab()));
-                } else  {
-                    resourceKey = null;
+                    //if a creative tab was provided, add it
+                    ResourceKey<CreativeModeTab> resourceKey;
+                    if (!annotation.creativeTab().isEmpty()) {
+                        resourceKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace(annotation.creativeTab()));
+                    } else {
+                        resourceKey = null;
+                    }
+
+                    // Register in the Minecraft registries
+                    registerItem(itemRegistrar, modId, id, clazz, resourceKey);
+                    System.out.println("Registered item: " + modId + ":" + id);
                 }
-
-                // Register in the Minecraft registries
-                registerItem(itemRegistrar, modId, id, clazz, resourceKey);
-                System.out.println("Registered item: " + modId + ":" + id);
-
             } catch (Exception e) {
                 Constants.LOG.error("Failed to register item {}", clazz.getName(), e);
             }
