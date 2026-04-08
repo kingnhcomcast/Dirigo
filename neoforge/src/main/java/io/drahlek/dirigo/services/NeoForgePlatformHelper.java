@@ -3,6 +3,9 @@ package io.drahlek.dirigo.services;
 import io.drahlek.dirigo.services.services.IPlatformHelper;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.fml.loading.FMLPaths;
+
+import java.nio.file.Path;
 
 public class NeoForgePlatformHelper implements IPlatformHelper {
 
@@ -23,4 +26,11 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
 
         return !FMLLoader.getCurrent().isProduction();
     }
+
+    @Override
+    public Path getConfigDirectory() {
+        return FMLPaths.CONFIGDIR.get();
+    }
+
+
 }

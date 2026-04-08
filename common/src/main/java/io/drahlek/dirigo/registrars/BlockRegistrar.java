@@ -8,9 +8,10 @@ import org.reflections.Reflections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class BlockRegistrar {
-    public static Map<String, net.minecraft.world.level.block.Block> blocks =  new HashMap<>();
+    public static Map<String, Supplier<net.minecraft.world.level.block.Block>> blocks =  new HashMap<>();
     /**
      * Scans the given package for classes annotated with @Block
      * and registers them with Minecraft automatically.

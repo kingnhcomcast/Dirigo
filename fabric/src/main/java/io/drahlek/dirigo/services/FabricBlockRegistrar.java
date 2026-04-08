@@ -12,13 +12,14 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.function.Supplier;
 
 public class FabricBlockRegistrar implements IBlockRegistrar {
     @Override
-    public <T extends Block> Block registerBlock(String modId, String name, Class<T> clazz, boolean shouldRegisterItem) {
+    public <T extends Block> Supplier<Block> registerBlock(String modId, String name, Class<T> clazz, boolean shouldRegisterItem) {
         // Create a registry key for the block
         ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(modId, name));
-        // Create the block instance
+        // Create the block properties
         BlockBehaviour.Properties properties = BlockBehaviour.Properties.of().setId(blockKey);
 
         // Create the Block instance.
@@ -38,7 +39,8 @@ public class FabricBlockRegistrar implements IBlockRegistrar {
                 Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem);
             }
 
-            return Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
+            Block registeredBlock = Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
+            return () -> registeredBlock;
 
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException(e);
