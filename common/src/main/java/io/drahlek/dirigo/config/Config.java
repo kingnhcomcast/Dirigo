@@ -9,12 +9,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 public abstract class Config<T> {
     private static final Map<String, Config<?>> CONFIGS = new ConcurrentHashMap<>();
+    private static final List<Consumer<Config<?>>> REGISTRATION_LISTENERS = new CopyOnWriteArrayList<>();
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
             .create();
@@ -46,6 +50,7 @@ public abstract class Config<T> {
             throw new RuntimeException(e);
         }
         CONFIGS.put(modId, this);
+        REGISTRATION_LISTENERS.forEach(listener -> listener.accept(this));
     }
 
     public static Optional<Config<?>> getRegistered(String modId) {
@@ -58,6 +63,15 @@ public abstract class Config<T> {
 
     public static Map<String, Config<?>> registeredConfigs() {
         return Collections.unmodifiableMap(CONFIGS);
+    }
+
+    public static void addRegistrationListener(Consumer<Config<?>> listener) {
+        if (listener == null) {
+            return;
+        }
+
+        REGISTRATION_LISTENERS.add(listener);
+        CONFIGS.values().forEach(listener);
     }
 
     public final T get() {

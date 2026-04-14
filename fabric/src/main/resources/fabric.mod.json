@@ -17,6 +17,12 @@
     "entrypoints": {
         "main": [
           "io.drahlek.dirigo.FabricDirigo"
+        ],
+        "client": [
+          "io.drahlek.dirigo.client.FabricDirigoClient"
+        ],
+        "modmenu": [
+          "io.drahlek.dirigo.client.DirigoModMenu"
         ]
     },
     "mixins": [
@@ -31,6 +37,7 @@
         "java": ">=${java_version}"
     },
     "suggests": {
+        "cloth-config": "*",
+        "modmenu": "*"
     }
 }
-  

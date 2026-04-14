@@ -12,6 +12,10 @@ neoForge {
     }
 }
 
+repositories {
+    maven { url "https://maven.shedaniel.me/" }
+}
+
 // Ensure the dependencies are shared
 dependencies {
     compileOnly "org.spongepowered:mixin:0.8.5"
@@ -19,6 +23,7 @@ dependencies {
     annotationProcessor "io.github.llamalad7:mixinextras-common:0.3.5"
     compileOnly "org.projectlombok:lombok:1.18.44"
     annotationProcessor "org.projectlombok:lombok:1.18.44"
+    compileOnly "me.shedaniel.cloth:cloth-config-neoforge:26.1.154"
     api "org.reflections:reflections:${reflections_version}"
 }
 
@@ -38,6 +43,11 @@ sourceSets {
 
 
 configurations {
+    clientImplementation.extendsFrom(implementation)
+    clientCompileOnly.extendsFrom(compileOnly)
+    clientAnnotationProcessor.extendsFrom(annotationProcessor)
+    clientRuntimeOnly.extendsFrom(runtimeOnly)
+
     commonJava {
         canBeResolved = false
         canBeConsumed = true

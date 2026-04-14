@@ -16,20 +16,18 @@ import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.annotation.Command;
 import io.drahlek.dirigo.annotation.CommandArgument;
 import io.drahlek.dirigo.annotation.CommandArgumentType;
-import io.drahlek.dirigo.annotation.ConfigSetting;
 import io.drahlek.dirigo.config.Config;
+import io.drahlek.dirigo.config.ConfigFieldUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.permissions.Permissions;
 import org.reflections.Reflections;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -260,21 +258,10 @@ public class CommandRegistrar {
 
     private static List<String> configSettingNames(Config<?> config) {
         Set<String> names = new LinkedHashSet<>();
-        Arrays.stream(config.getDataClass().getDeclaredFields())
-                .filter(field -> field.isAnnotationPresent(ConfigSetting.class))
-                .sorted(Comparator.comparing(CommandRegistrar::settingName))
-                .forEach(field -> names.add(settingName(field)));
+        ConfigFieldUtil.configSettingFields(config)
+                .forEach(field -> names.add(ConfigFieldUtil.settingName(field)));
 
         return new ArrayList<>(names);
-    }
-
-    private static String settingName(Field field) {
-        ConfigSetting setting = field.getAnnotation(ConfigSetting.class);
-        if (setting == null || setting.value().isBlank()) {
-            return field.getName();
-        }
-
-        return setting.value();
     }
 
     private static boolean isExecutableNode(
