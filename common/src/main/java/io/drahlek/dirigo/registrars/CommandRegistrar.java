@@ -16,16 +16,22 @@ import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.annotation.Command;
 import io.drahlek.dirigo.annotation.CommandArgument;
 import io.drahlek.dirigo.annotation.CommandArgumentType;
+import io.drahlek.dirigo.annotation.ConfigSetting;
 import io.drahlek.dirigo.config.Config;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.permissions.Permissions;
 import org.reflections.Reflections;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 public class CommandRegistrar {
@@ -101,23 +107,56 @@ public class CommandRegistrar {
             com.mojang.brigadier.Command<CommandSourceStack> command,
             String modId
     ) {
-        ArgumentBuilder<CommandSourceStack, ?> child = null;
         int totalSegments = pathSegments.length + arguments.length;
+        List<ArgumentBuilder<CommandSourceStack, ?>> branches = buildCommandBranches(
+                0,
+                pathSegments,
+                arguments,
+                totalSegments,
+                requiresOp,
+                command,
+                modId
+        );
 
-        for (int index = totalSegments - 1; index >= 0; index--) {
-            ArgumentBuilder<CommandSourceStack, ?> current = createBuilder(index, pathSegments, arguments, modId);
-
-            if (isExecutableNode(index, pathSegments.length, totalSegments, arguments)) {
-                makeExecutable(current, command, requiresOp);
-            }
-            if (child != null) {
-                current.then(child);
-            }
-
-            child = current;
+        if (branches.size() != 1) {
+            throw new IllegalStateException("Command branch must have exactly one root node");
         }
 
-        return child;
+        return branches.get(0);
+    }
+
+    private static List<ArgumentBuilder<CommandSourceStack, ?>> buildCommandBranches(
+            int index,
+            String[] pathSegments,
+            CommandArgument[] arguments,
+            int totalSegments,
+            boolean requiresOp,
+            com.mojang.brigadier.Command<CommandSourceStack> command,
+            String modId
+    ) {
+        List<ArgumentBuilder<CommandSourceStack, ?>> branches = createBuilders(index, pathSegments, arguments, modId);
+
+        for (ArgumentBuilder<CommandSourceStack, ?> branch : branches) {
+            if (isExecutableNode(index, pathSegments.length, totalSegments, arguments)) {
+                makeExecutable(branch, command, requiresOp);
+            }
+
+            if (index + 1 < totalSegments) {
+                for (ArgumentBuilder<CommandSourceStack, ?> child : buildCommandBranches(
+                        index + 1,
+                        pathSegments,
+                        arguments,
+                        totalSegments,
+                        requiresOp,
+                        command,
+                        modId
+                )) {
+                    branch.then(child);
+                }
+            }
+        }
+
+        return branches;
     }
 
     private static void makeExecutable(
@@ -131,7 +170,7 @@ public class CommandRegistrar {
         builder.executes(command);
     }
 
-    private static ArgumentBuilder<CommandSourceStack, ?> createBuilder(
+    private static List<ArgumentBuilder<CommandSourceStack, ?>> createBuilders(
             int index,
             String[] pathSegments,
             CommandArgument[] arguments,
@@ -142,11 +181,46 @@ public class CommandRegistrar {
             if (pathSegment.equals(modId)) {
                 Constants.LOG.warn("Command path segment '{}' matches mod id; command will include it twice", pathSegment);
             }
-            return Commands.literal(pathSegment);
+            return List.of(Commands.literal(pathSegment));
         }
 
         CommandArgument argument = arguments[index - pathSegments.length];
-        return Commands.argument(argument.name(), getArgumentType(argument));
+        if (argument.type() == CommandArgumentType.CONFIG_SETTING) {
+            return configSettingBuilders(modId);
+        }
+
+        return List.of(Commands.argument(argument.name(), getArgumentType(argument)));
+    }
+
+    private static List<ArgumentBuilder<CommandSourceStack, ?>> configSettingBuilders(String modId) {
+        Config<?> config = Config.getRegistered(modId)
+                .orElseThrow(() -> new IllegalStateException("No config registered for " + modId));
+        List<ArgumentBuilder<CommandSourceStack, ?>> builders = new ArrayList<>();
+
+        for (String settingName : configSettingNames(config)) {
+            builders.add(Commands.literal(settingName));
+        }
+
+        return builders;
+    }
+
+    private static List<String> configSettingNames(Config<?> config) {
+        Set<String> names = new LinkedHashSet<>();
+        Arrays.stream(config.getDataClass().getDeclaredFields())
+                .filter(field -> field.isAnnotationPresent(ConfigSetting.class))
+                .sorted(Comparator.comparing(CommandRegistrar::settingName))
+                .forEach(field -> names.add(settingName(field)));
+
+        return new ArrayList<>(names);
+    }
+
+    private static String settingName(Field field) {
+        ConfigSetting setting = field.getAnnotation(ConfigSetting.class);
+        if (setting == null || setting.value().isBlank()) {
+            return field.getName();
+        }
+
+        return setting.value();
     }
 
     private static boolean isExecutableNode(
@@ -197,6 +271,10 @@ public class CommandRegistrar {
                 Constants.LOG.error("Failed to register command {} because greedy string argument '{}' is not the final argument", clazz.getName(), argument.name());
                 return false;
             }
+            if (argument.type() == CommandArgumentType.CONFIG_SETTING && argument.optional()) {
+                Constants.LOG.error("Failed to register command {} because config setting argument '{}' cannot be optional", clazz.getName(), argument.name());
+                return false;
+            }
 
             foundOptionalArgument = foundOptionalArgument || argument.optional();
         }
@@ -206,6 +284,7 @@ public class CommandRegistrar {
 
     private static ArgumentType<?> getArgumentType(CommandArgument argument) {
         return switch (argument.type()) {
+            case CONFIG_SETTING -> throw new IllegalArgumentException("CONFIG_SETTING is expanded into literal nodes");
             case WORD -> StringArgumentType.word();
             case STRING -> StringArgumentType.string();
             case GREEDY_STRING -> StringArgumentType.greedyString();

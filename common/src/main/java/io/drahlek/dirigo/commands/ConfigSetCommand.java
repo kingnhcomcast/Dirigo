@@ -14,14 +14,13 @@ import java.lang.reflect.Field;
 @Command(
         value = "config.set",
         arguments = {
-                @CommandArgument(name = "setting", type = CommandArgumentType.WORD),
+                @CommandArgument(name = "setting", type = CommandArgumentType.CONFIG_SETTING),
                 @CommandArgument(name = "value", type = CommandArgumentType.GREEDY_STRING)
         },
         requiresOp = true,
         requiresConfig = true
 )
 public class ConfigSetCommand {
-    static final String SETTING_ARG = "setting";
     static final String VALUE_ARG = "value";
 
     public static int run(CommandContext<CommandSourceStack> context) {
@@ -30,10 +29,9 @@ public class ConfigSetCommand {
             return 0;
         }
 
-        String settingName = StringArgumentType.getString(context, SETTING_ARG);
-        Field field = ConfigCommandUtil.findSettingField(config, settingName);
+        Field field = ConfigCommandUtil.findSelectedSettingField(context, config);
         if (field == null) {
-            context.getSource().sendFailure(Component.literal("Unknown config setting '" + settingName + "'."));
+            context.getSource().sendFailure(Component.literal("Unknown config setting."));
             return 0;
         }
 

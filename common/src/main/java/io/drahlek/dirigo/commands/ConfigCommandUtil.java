@@ -1,6 +1,7 @@
 package io.drahlek.dirigo.commands;
 
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.drahlek.dirigo.annotation.ConfigSetting;
 import io.drahlek.dirigo.config.Config;
 import net.minecraft.commands.CommandSourceStack;
@@ -48,6 +49,21 @@ final class ConfigCommandUtil {
                 .filter(field -> settingName(field).equals(name) || settingName(field).equalsIgnoreCase(name))
                 .findFirst()
                 .orElse(null);
+    }
+
+    static Field findSelectedSettingField(CommandContext<CommandSourceStack> context, Config<?> config) {
+        for (int index = context.getNodes().size() - 1; index >= 0; index--) {
+            if (!(context.getNodes().get(index).getNode() instanceof LiteralCommandNode<?>)) {
+                continue;
+            }
+
+            Field field = findSettingField(config, context.getNodes().get(index).getNode().getName());
+            if (field != null) {
+                return field;
+            }
+        }
+
+        return null;
     }
 
     static void sendFieldValue(CommandContext<CommandSourceStack> context, Config<?> config, Field field) {
