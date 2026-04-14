@@ -8,12 +8,18 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class Config<T> {
+    private static final Map<String, Config<?>> CONFIGS = new ConcurrentHashMap<>();
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
             .create();
-    private Path path;
+    private final String modId;
+    private final Path path;
     private final Class<T> type;
 
     protected T data;
@@ -31,6 +37,7 @@ public abstract class Config<T> {
             throw new IllegalArgumentException("type cannot be null");
         }
 
+        this.modId = modId;
         this.path = configDirectory.resolve(modId).resolve(fileName);
         this.type = type;
         try {
@@ -38,14 +45,35 @@ public abstract class Config<T> {
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
+        CONFIGS.put(modId, this);
+    }
+
+    public static Optional<Config<?>> getRegistered(String modId) {
+        if (modId == null || modId.isBlank()) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(CONFIGS.get(modId));
+    }
+
+    public static Map<String, Config<?>> registeredConfigs() {
+        return Collections.unmodifiableMap(CONFIGS);
     }
 
     public final T get() {
         return data;
     }
 
+    public final String getModId() {
+        return modId;
+    }
+
     public final Path getPath() {
         return path;
+    }
+
+    public final Class<T> getDataClass() {
+        return type;
     }
 
     public final void load() {
