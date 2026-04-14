@@ -30,8 +30,10 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class CommandRegistrar {
@@ -44,35 +46,25 @@ public class CommandRegistrar {
         }
 
         Set<Class<?>> commandClasses = collectCommandClasses(packageName);
+        List<ResolvedCommand> resolvedCommands = resolveCommands(commandClasses, modId);
+        Set<String> opOnlyPrefixes = computeOpOnlyPrefixes(resolvedCommands);
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal(modId);
         boolean hasCommands = false;
 
-        for (Class<?> clazz : commandClasses) {
-            Command annotation = clazz.getAnnotation(Command.class);
-            if (annotation == null) {
-                continue;
-            }
-            if (!shouldRegisterCommand(annotation, modId)) {
-                continue;
-            }
-
-            String commandPath = annotation.value();
-            String[] pathSegments = parsePath(commandPath, clazz);
-            if (pathSegments.length == 0) {
-                continue;
-            }
-
-            CommandArgument[] arguments = annotation.arguments();
-            if (!isValidArgumentLayout(arguments, clazz)) {
-                continue;
-            }
-
+        for (ResolvedCommand resolved : resolvedCommands) {
             try {
-                root.then(buildCommandBranch(pathSegments, arguments, annotation.requiresOp(), getCommand(clazz), modId));
+                root.then(buildCommandBranch(
+                        resolved.pathSegments(),
+                        resolved.arguments(),
+                        resolved.annotation().requiresOp(),
+                        getCommand(resolved.clazz()),
+                        modId,
+                        opOnlyPrefixes
+                ));
                 hasCommands = true;
-                Constants.LOG.info("Registered command {} from {} for {}", commandPath, clazz.getName(), modId);
+                Constants.LOG.info("Registered command {} from {} for {}", resolved.annotation().value(), resolved.clazz().getName(), modId);
             } catch (RuntimeException e) {
-                Constants.LOG.error("Failed to register command {} from {}", commandPath, clazz.getName(), e);
+                Constants.LOG.error("Failed to register command {} from {}", resolved.annotation().value(), resolved.clazz().getName(), e);
             }
         }
 
@@ -96,6 +88,58 @@ public class CommandRegistrar {
         return !command.requiresConfig() || Config.getRegistered(modId).isPresent();
     }
 
+    private static List<ResolvedCommand> resolveCommands(Set<Class<?>> commandClasses, String modId) {
+        List<ResolvedCommand> resolvedCommands = new ArrayList<>();
+
+        for (Class<?> clazz : commandClasses) {
+            Command annotation = clazz.getAnnotation(Command.class);
+            if (annotation == null || !shouldRegisterCommand(annotation, modId)) {
+                continue;
+            }
+
+            String[] pathSegments = parsePath(annotation.value(), clazz);
+            if (pathSegments.length == 0) {
+                continue;
+            }
+
+            CommandArgument[] arguments = annotation.arguments();
+            if (!isValidArgumentLayout(arguments, clazz)) {
+                continue;
+            }
+
+            resolvedCommands.add(new ResolvedCommand(clazz, annotation, pathSegments, arguments));
+        }
+
+        return resolvedCommands;
+    }
+
+    private static Set<String> computeOpOnlyPrefixes(List<ResolvedCommand> commands) {
+        Map<String, PrefixAccess> prefixAccess = new HashMap<>();
+
+        for (ResolvedCommand command : commands) {
+            String[] pathSegments = command.pathSegments();
+            for (int index = 0; index < pathSegments.length; index++) {
+                String prefix = String.join(".", Arrays.copyOfRange(pathSegments, 0, index + 1));
+                PrefixAccess access = prefixAccess.computeIfAbsent(prefix, ignored -> new PrefixAccess());
+                if (command.annotation().requiresOp()) {
+                    access.hasOp = true;
+                } else {
+                    access.hasNonOp = true;
+                }
+            }
+        }
+
+        Set<String> opOnlyPrefixes = new LinkedHashSet<>();
+        for (Map.Entry<String, PrefixAccess> entry : prefixAccess.entrySet()) {
+            PrefixAccess access = entry.getValue();
+            if (access.hasOp && !access.hasNonOp) {
+                opOnlyPrefixes.add(entry.getKey());
+            }
+        }
+
+        return opOnlyPrefixes;
+    }
+
     private static boolean isOpPlayer(CommandSourceStack source) {
         return source.permissions().hasPermission(Permissions.COMMANDS_ADMIN);
     }
@@ -105,7 +149,8 @@ public class CommandRegistrar {
             CommandArgument[] arguments,
             boolean requiresOp,
             com.mojang.brigadier.Command<CommandSourceStack> command,
-            String modId
+            String modId,
+            Set<String> opOnlyPrefixes
     ) {
         int totalSegments = pathSegments.length + arguments.length;
         List<ArgumentBuilder<CommandSourceStack, ?>> branches = buildCommandBranches(
@@ -115,7 +160,8 @@ public class CommandRegistrar {
                 totalSegments,
                 requiresOp,
                 command,
-                modId
+                modId,
+                opOnlyPrefixes
         );
 
         if (branches.size() != 1) {
@@ -132,9 +178,10 @@ public class CommandRegistrar {
             int totalSegments,
             boolean requiresOp,
             com.mojang.brigadier.Command<CommandSourceStack> command,
-            String modId
+            String modId,
+            Set<String> opOnlyPrefixes
     ) {
-        List<ArgumentBuilder<CommandSourceStack, ?>> branches = createBuilders(index, pathSegments, arguments, modId);
+        List<ArgumentBuilder<CommandSourceStack, ?>> branches = createBuilders(index, pathSegments, arguments, modId, opOnlyPrefixes);
 
         for (ArgumentBuilder<CommandSourceStack, ?> branch : branches) {
             if (isExecutableNode(index, pathSegments.length, totalSegments, arguments)) {
@@ -149,7 +196,8 @@ public class CommandRegistrar {
                         totalSegments,
                         requiresOp,
                         command,
-                        modId
+                        modId,
+                        opOnlyPrefixes
                 )) {
                     branch.then(child);
                 }
@@ -174,14 +222,20 @@ public class CommandRegistrar {
             int index,
             String[] pathSegments,
             CommandArgument[] arguments,
-            String modId
+            String modId,
+            Set<String> opOnlyPrefixes
     ) {
         if (index < pathSegments.length) {
             String pathSegment = pathSegments[index];
             if (pathSegment.equals(modId)) {
                 Constants.LOG.warn("Command path segment '{}' matches mod id; command will include it twice", pathSegment);
             }
-            return List.of(Commands.literal(pathSegment));
+            LiteralArgumentBuilder<CommandSourceStack> literal = Commands.literal(pathSegment);
+            String prefix = String.join(".", Arrays.copyOfRange(pathSegments, 0, index + 1));
+            if (opOnlyPrefixes.contains(prefix)) {
+                literal.requires(CommandRegistrar::isOpPlayer);
+            }
+            return List.of(literal);
         }
 
         CommandArgument argument = arguments[index - pathSegments.length];
@@ -331,5 +385,18 @@ public class CommandRegistrar {
                     e
             );
         }
+    }
+
+    private record ResolvedCommand(
+            Class<?> clazz,
+            Command annotation,
+            String[] pathSegments,
+            CommandArgument[] arguments
+    ) {
+    }
+
+    private static final class PrefixAccess {
+        private boolean hasOp;
+        private boolean hasNonOp;
     }
 }
