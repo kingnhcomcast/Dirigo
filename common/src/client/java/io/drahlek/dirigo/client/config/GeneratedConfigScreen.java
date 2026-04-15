@@ -31,14 +31,14 @@ public final class GeneratedConfigScreen {
     public static Screen create(Screen parent, Config<?> config) {
         ConfigBuilder builder = ConfigBuilder.create()
                 .setParentScreen(parent)
-                .setTitle(Component.literal(config.getModId() + " Config"));
+                .setTitle(Component.literal(config.getModName() + " Config"));
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
         ConfigCategory general = builder.getOrCreateCategory(Component.literal("General"));
         boolean canEdit = canModifyConfig();
 
         if (!canEdit) {
             general.addEntry(entryBuilder.startTextDescription(
-                    Component.literal("Server config is read-only for this player.")
+                    Component.literal("Open a local world or connect to a server with config permissions to edit these settings.")
             ).build());
         }
 

@@ -27,16 +27,24 @@ public abstract class Config<T> {
             .setPrettyPrinting()
             .create();
     private final String modId;
+    private final String modName;
     private final Path path;
     private final Class<T> type;
 
     protected T data;
 
     protected Config(String modId, String fileName, Class<T> type) {
+        this(modId, modId, fileName, type);
+    }
+
+    protected Config(String modId, String modName, String fileName, Class<T> type) {
         Path configDirectory = Services.PLATFORM.getConfigDirectory();
 
         if (modId == null || modId.isBlank()) {
             throw new IllegalArgumentException("modId cannot be null or blank");
+        }
+        if (modName == null || modName.isBlank()) {
+            throw new IllegalArgumentException("modName cannot be null or blank");
         }
         if (fileName == null || fileName.isBlank()) {
             throw new IllegalArgumentException("fileName cannot be null or blank");
@@ -46,6 +54,7 @@ public abstract class Config<T> {
         }
 
         this.modId = modId;
+        this.modName = modName;
         this.path = configDirectory.resolve(modId).resolve(fileName);
         this.type = type;
         try {
@@ -88,6 +97,10 @@ public abstract class Config<T> {
 
     public final String getModId() {
         return modId;
+    }
+
+    public final String getModName() {
+        return modName;
     }
 
     public final Path getPath() {
