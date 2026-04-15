@@ -18,9 +18,9 @@ import io.drahlek.dirigo.annotation.CommandArgument;
 import io.drahlek.dirigo.annotation.CommandArgumentType;
 import io.drahlek.dirigo.config.Config;
 import io.drahlek.dirigo.config.ConfigFieldUtil;
+import io.drahlek.dirigo.permissions.PermissionHelper;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.server.permissions.Permissions;
 import org.reflections.Reflections;
 
 import java.lang.reflect.InvocationTargetException;
@@ -138,10 +138,6 @@ public class CommandRegistrar {
         return opOnlyPrefixes;
     }
 
-    private static boolean isOpPlayer(CommandSourceStack source) {
-        return source.permissions().hasPermission(Permissions.COMMANDS_ADMIN);
-    }
-
     private static ArgumentBuilder<CommandSourceStack, ?> buildCommandBranch(
             String[] pathSegments,
             CommandArgument[] arguments,
@@ -207,11 +203,11 @@ public class CommandRegistrar {
 
     private static void makeExecutable(
             ArgumentBuilder<CommandSourceStack, ?> builder,
-            com.mojang.brigadier.Command<CommandSourceStack> command,
-            boolean requiresOp
+        com.mojang.brigadier.Command<CommandSourceStack> command,
+        boolean requiresOp
     ) {
         if (requiresOp) {
-            builder.requires(CommandRegistrar::isOpPlayer);
+            builder.requires(PermissionHelper::canUseOpCommands);
         }
         builder.executes(command);
     }
@@ -231,7 +227,7 @@ public class CommandRegistrar {
             LiteralArgumentBuilder<CommandSourceStack> literal = Commands.literal(pathSegment);
             String prefix = String.join(".", Arrays.copyOfRange(pathSegments, 0, index + 1));
             if (opOnlyPrefixes.contains(prefix)) {
-                literal.requires(CommandRegistrar::isOpPlayer);
+                literal.requires(PermissionHelper::canUseOpCommands);
             }
             return List.of(literal);
         }

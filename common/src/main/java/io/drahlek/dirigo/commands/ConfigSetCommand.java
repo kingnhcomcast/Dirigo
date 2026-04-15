@@ -50,7 +50,7 @@ public class ConfigSetCommand {
         }
 
         ConfigCommandUtil.setConfigValue(config, field, parsedValue);
-        ConfigCommandUtil.save(config);
+        ConfigCommandUtil.save(config, context.getSource().getServer());
         ConfigCommandUtil.sendFieldValue(context, config, field);
         return com.mojang.brigadier.Command.SINGLE_SUCCESS;
     }

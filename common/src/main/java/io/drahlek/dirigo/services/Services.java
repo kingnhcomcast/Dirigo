@@ -6,6 +6,7 @@ import io.drahlek.dirigo.services.services.IItemRegistrar;
 import io.drahlek.dirigo.services.services.IPlatformHelper;
 
 import java.util.ServiceLoader;
+import java.util.Optional;
 
 // Service loaders are a built-in Java feature that allow us to locate implementations of an interface that vary from one
 // environment to another. In the context of MultiLoader we use this feature to access a mock API in the common code that
@@ -18,6 +19,7 @@ public class Services {
     public static final IPlatformHelper PLATFORM = load(IPlatformHelper.class);
     public static final IItemRegistrar ITEM_REGISTRAR = load(IItemRegistrar.class);
     public static final IBlockRegistrar BLOCK_REGISTRAR = load(IBlockRegistrar.class);
+    public static final INetworkService NETWORK_SERVICE = load(INetworkService.class);
 
     // This code is used to load a service for the current environment. Your implementation of the service must be defined
     // manually by including a text file in META-INF/services named with the fully qualified class name of the service.
@@ -29,6 +31,12 @@ public class Services {
                 .findFirst()
                 .orElseThrow(() -> new NullPointerException("Failed to load service for " + clazz.getName()));
         Constants.LOG.debug("Loaded {} for service {}", loadedService, clazz);
+        return loadedService;
+    }
+
+    public static <T> Optional<T> loadOptional(Class<T> clazz) {
+        Optional<T> loadedService = ServiceLoader.load(clazz).findFirst();
+        loadedService.ifPresent(service -> Constants.LOG.debug("Loaded {} for service {}", service, clazz));
         return loadedService;
     }
 }

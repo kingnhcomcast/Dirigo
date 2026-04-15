@@ -1,12 +1,16 @@
 package io.drahlek.dirigo.client.config;
 
 import io.drahlek.dirigo.annotation.ConfigSetting;
+import io.drahlek.dirigo.client.mixin.LocalPlayerAccessor;
 import io.drahlek.dirigo.config.Config;
 import io.drahlek.dirigo.config.ConfigFieldUtil;
+import io.drahlek.dirigo.permissions.PermissionHelper;
+import io.drahlek.dirigo.services.Services;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -30,13 +34,38 @@ public final class GeneratedConfigScreen {
                 .setTitle(Component.literal(config.getModId() + " Config"));
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
         ConfigCategory general = builder.getOrCreateCategory(Component.literal("General"));
+        boolean canEdit = canModifyConfig();
+
+        if (!canEdit) {
+            general.addEntry(entryBuilder.startTextDescription(
+                    Component.literal("Server config is read-only for this player.")
+            ).build());
+        }
 
         ConfigFieldUtil.configSettingFields(config)
                 .map(field -> buildEntry(entryBuilder, config, field))
+                .map(entry -> setEditable(entry, canEdit))
                 .forEach(general::addEntry);
 
-        builder.setSavingRunnable(config::save);
+        builder.setSavingRunnable(() -> {
+            if (canEdit) {
+                Services.NETWORK_SERVICE.sendToServer(config.toPayload());
+            }
+        });
         return builder.build();
+    }
+
+    private static boolean canModifyConfig() {
+        Minecraft minecraft = Minecraft.getInstance();
+        return minecraft.player != null
+                && ((LocalPlayerAccessor) minecraft.player)
+                        .dirigo$getPermissions()
+                        .hasPermission(PermissionHelper.CONFIG_MODIFY_PERMISSION);
+    }
+
+    private static AbstractConfigListEntry<?> setEditable(AbstractConfigListEntry<?> entry, boolean editable) {
+        entry.setEditable(editable);
+        return entry;
     }
 
     private static AbstractConfigListEntry<?> buildEntry(ConfigEntryBuilder entryBuilder, Config<?> config, Field field) {

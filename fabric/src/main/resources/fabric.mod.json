@@ -28,6 +28,10 @@
     "mixins": [
         {
             "config": "dirigo.common.mixins.json"
+        },
+        {
+            "config": "dirigo.common.client.mixins.json",
+            "environment": "client"
         }
     ],
     "depends": {

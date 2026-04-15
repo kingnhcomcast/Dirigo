@@ -17,7 +17,7 @@ public class ConfigReloadConfigCommand {
             return 0;
         }
 
-        config.reload();
+        config.reload(context.getSource().getServer());
         CommandUtil.sendString(context, "[" + config.getModId() + "] Config reloaded.");
         return com.mojang.brigadier.Command.SINGLE_SUCCESS;
     }

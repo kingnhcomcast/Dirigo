@@ -2,9 +2,13 @@ package io.drahlek.dirigo.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.services.Services;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,6 +69,10 @@ public abstract class Config<T> {
         return Collections.unmodifiableMap(CONFIGS);
     }
 
+    public static void loadRegistered(MinecraftServer server) {
+        CONFIGS.values().forEach(config -> config.load(server));
+    }
+
     public static void addRegistrationListener(Consumer<Config<?>> listener) {
         if (listener == null) {
             return;
@@ -90,39 +98,100 @@ public abstract class Config<T> {
         return type;
     }
 
-    public final void load() {
+    public final void load(MinecraftServer server) {
         try {
             Files.createDirectories(path.getParent());
 
             if (!Files.exists(path)) {
-                save();
+                save(server);
             }
 
             String json = Files.readString(path, StandardCharsets.UTF_8);
-            data = GSON.fromJson(json, type);
+            loadFromJson(json);
         } catch (Exception e) {
             onLoadFailed(e);
 
             try {
-                save();
+                save(server);
             } catch (Exception saveException) {
                 onSaveFailed(saveException);
             }
         }
     }
 
-    public final void save() {
+    public final void save(MinecraftServer server) {
         try {
             Files.createDirectories(path.getParent());
             String json = GSON.toJson(data);
             Files.writeString(path, json, StandardCharsets.UTF_8);
+            syncToPlayers(server);
         } catch (Exception e) {
             onSaveFailed(e);
         }
     }
 
-    public final void reload() {
-        load();
+    public final void reload(MinecraftServer server) {
+        load(server);
+    }
+
+    public final ConfigPayload toPayload() {
+        return new ConfigPayload(modId, GSON.toJson(data));
+    }
+
+    public static void applyPayload(ConfigPayload payload) {
+        if (payload == null) {
+            return;
+        }
+
+        Config.getRegistered(payload.modId())
+                .ifPresent(config -> config.loadFromJson(payload.json()));
+    }
+
+    private void loadFromJson(String json) {
+        T loadedData = GSON.fromJson(json, type);
+        if (loadedData == null) {
+            Constants.LOG.warn("Ignoring empty config data for {} at {}", modId, path);
+            return;
+        }
+
+        rejectOutOfRangeValues(loadedData);
+        data = loadedData;
+    }
+
+    private void rejectOutOfRangeValues(T loadedData) {
+        ConfigFieldUtil.configSettingFields(this).forEach(field -> {
+            Object loadedValue = readFieldValue(loadedData, field);
+            String validationError = ConfigFieldUtil.validateRange(field, loadedValue);
+            if (validationError == null) {
+                return;
+            }
+
+            Object currentValue = readFieldValue(data, field);
+            if (ConfigFieldUtil.validateRange(field, currentValue) != null) {
+                currentValue = ConfigFieldUtil.defaultValue(this, field);
+            }
+
+            writeFieldValue(loadedData, field, currentValue);
+            Constants.LOG.warn("Ignoring invalid config value for {} at {}: {}", modId, path, validationError);
+        });
+    }
+
+    private static Object readFieldValue(Object owner, Field field) {
+        try {
+            field.setAccessible(true);
+            return field.get(owner);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to read config field " + field.getName(), e);
+        }
+    }
+
+    private static void writeFieldValue(Object owner, Field field, Object value) {
+        try {
+            field.setAccessible(true);
+            field.set(owner, value);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to write config field " + field.getName(), e);
+        }
     }
 
     protected void onLoadFailed(Exception e) {
@@ -131,5 +200,12 @@ public abstract class Config<T> {
 
     protected void onSaveFailed(Exception e) {
         e.printStackTrace();
+    }
+
+    private void syncToPlayers(MinecraftServer server) {
+        ConfigPayload payload = toPayload();
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            Services.NETWORK_SERVICE.sendToClient(player, payload);
+        }
     }
 }

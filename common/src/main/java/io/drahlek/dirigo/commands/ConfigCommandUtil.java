@@ -6,6 +6,7 @@ import io.drahlek.dirigo.config.Config;
 import io.drahlek.dirigo.config.ConfigFieldUtil;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 
 import java.lang.reflect.Field;
 import java.util.stream.Stream;
@@ -77,8 +78,8 @@ final class ConfigCommandUtil {
         return ConfigFieldUtil.settingName(field);
     }
 
-    static void save(Config<?> config) {
-        config.save();
+    static void save(Config<?> config, MinecraftServer server) {
+        config.save(server);
     }
 
     private static String getModId(CommandContext<CommandSourceStack> context) {
