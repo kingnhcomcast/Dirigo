@@ -12,15 +12,27 @@
         "sources": "https://github.com/kingnhcomcast/dirigo"
     },
     "license": "${license}",
-    "icon": "assets/dirigo/icon.png",
+    "icon": "icon.png",
     "environment": "*",
     "entrypoints": {
         "main": [
+          "io.drahlek.dirigo.FabricDirigo"
         ],
         "client": [
+          "io.drahlek.dirigo.client.FabricDirigoClient"
+        ],
+        "modmenu": [
+          "io.drahlek.dirigo.client.DirigoModMenu"
         ]
     },
     "mixins": [
+        {
+            "config": "dirigo.common.mixins.json"
+        },
+        {
+            "config": "dirigo.common.client.mixins.json",
+            "environment": "client"
+        }
     ],
     "depends": {
         "fabricloader": ">=${fabric_loader_version}",
@@ -29,7 +41,7 @@
         "java": ">=${java_version}"
     },
     "suggests": {
-        "another-mod": "*"
+        "cloth-config": "*",
+        "modmenu": "*"
     }
 }
-  

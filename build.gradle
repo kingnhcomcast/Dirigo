@@ -16,3 +16,9 @@ subprojects {
         options.addStringOption('Xdoclint:none', '-quiet')
     }
 }
+
+tasks.configureEach { task ->
+    if (task instanceof Copy || task instanceof AbstractArchiveTask) {
+        task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
+}

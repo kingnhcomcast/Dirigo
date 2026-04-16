@@ -1,0 +1,2 @@
+- make sure scheduled events persist (not really used yet)
+- auto add /help (show all commands)
