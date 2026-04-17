@@ -8,7 +8,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
-import org.reflections.Reflections;
 
 import java.util.Set;
 
@@ -24,8 +23,7 @@ public class ItemRegistrar {
         IItemRegistrar itemRegistrar = Services.ITEM_REGISTRAR;
 
         // Scan only the specified package — much faster and safer
-        Reflections reflections = new Reflections(packageName);
-        Set<Class<?>> itemClasses = reflections.getTypesAnnotatedWith(Item.class);
+        Set<Class<?>> itemClasses = Services.CLASS_DISCOVERY.getTypesAnnotatedWith(packageName, Item.class);
 
         for (Class<?> clazz : itemClasses) {
             // Must extend Minecraft's Item class

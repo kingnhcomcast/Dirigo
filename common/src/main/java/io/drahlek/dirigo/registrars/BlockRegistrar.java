@@ -3,7 +3,6 @@ package io.drahlek.dirigo.registrars;
 import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.annotation.Block;
 import io.drahlek.dirigo.services.Services;
-import org.reflections.Reflections;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,8 +20,7 @@ public class BlockRegistrar {
      */
     public static void registerBlocks(String modId, String packageName) {
         // Scan only the specified package — much faster and safer
-        Reflections reflections = new Reflections(packageName);
-        Set<Class<?>> blockClasses = reflections.getTypesAnnotatedWith(Block.class);
+        Set<Class<?>> blockClasses = Services.CLASS_DISCOVERY.getTypesAnnotatedWith(packageName, Block.class);
 
         for (Class<?> clazz : blockClasses) {
             // Must extend Minecraft's Item class
