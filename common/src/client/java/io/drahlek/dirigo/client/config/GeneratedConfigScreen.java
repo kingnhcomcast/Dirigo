@@ -59,8 +59,7 @@ public final class GeneratedConfigScreen {
         Minecraft minecraft = Minecraft.getInstance();
         return minecraft.player != null
                 && ((LocalPlayerAccessor) minecraft.player)
-                        .dirigo$getPermissions()
-                        .hasPermission(PermissionHelper.CONFIG_MODIFY_PERMISSION);
+                        .dirigo$getPermissionLevel() >= PermissionHelper.CONFIG_MODIFY_PERMISSION_LEVEL;
     }
 
     private static AbstractConfigListEntry<?> setEditable(AbstractConfigListEntry<?> entry, boolean editable) {

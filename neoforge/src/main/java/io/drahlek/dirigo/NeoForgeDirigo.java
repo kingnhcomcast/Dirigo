@@ -23,7 +23,7 @@ public class NeoForgeDirigo {
                 EventScheduler.INSTANCE.onServerTick(event.getServer()));
         NeoForge.EVENT_BUS.addListener(NeoForgeConfigNetworking::syncConfigsOnJoin);
 
-        if (FMLEnvironment.getDist() == Dist.CLIENT) {
+        if (FMLEnvironment.dist == Dist.CLIENT) {
             initClient();
         }
     }

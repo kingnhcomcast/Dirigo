@@ -4,7 +4,6 @@ import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.event.EventBase;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
-import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,11 +61,11 @@ public final class EventScheduler {
 
     private EventScheduler() {}
 
-    public void scheduleEvent(@NonNull Level level, EventBase event, long ticks) {
+    public void scheduleEvent(Level level, EventBase event, long ticks) {
         scheduleCallback(level, event::publish, ticks);
     }
 
-    public void scheduleCallback(@NonNull Level level, @NonNull Runnable callback, long ticks) {
+    public void scheduleCallback(Level level, Runnable callback, long ticks) {
         MinecraftServer server = level.getServer();
         if (server == null) {
             throw new IllegalArgumentException("Cannot schedule callback for a level with no server");

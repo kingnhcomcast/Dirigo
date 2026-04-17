@@ -5,6 +5,7 @@ import io.drahlek.dirigo.config.Config;
 import io.drahlek.dirigo.config.ConfigPayload;
 import io.drahlek.dirigo.permissions.PermissionHelper;
 import io.drahlek.dirigo.services.Services;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -17,6 +18,11 @@ public class NeoForgeConfigNetworking {
                 ConfigPayload.ID,
                 ConfigPayload.CODEC,
                 (payload, context) -> context.enqueueWork(() -> {
+                    if (context.flow() == PacketFlow.CLIENTBOUND) {
+                        Config.applyPayload(payload);
+                        return;
+                    }
+
                     if (!(context.player() instanceof ServerPlayer serverPlayer)) {
                         return;
                     }
@@ -29,10 +35,7 @@ public class NeoForgeConfigNetworking {
                     Config.applyPayload(payload);
                     Config.getRegistered(payload.modId())
                             .ifPresent(config -> config.save(serverPlayer.level().getServer()));
-                }),
-                (payload, context) -> context.enqueueWork(() ->
-                        Config.applyPayload(payload)
-                )
+                })
         );
     }
 

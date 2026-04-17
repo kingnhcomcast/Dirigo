@@ -5,8 +5,8 @@ import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.services.Services;
 import io.drahlek.dirigo.services.services.IItemRegistrar;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 
 import java.util.Set;
@@ -43,7 +43,7 @@ public class ItemRegistrar {
                     //if a creative tab was provided, add it
                     ResourceKey<CreativeModeTab> resourceKey;
                     if (!annotation.creativeTab().isEmpty()) {
-                        resourceKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace(annotation.creativeTab()));
+                        resourceKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, creativeTabId(annotation.creativeTab()));
                     } else {
                         resourceKey = null;
                     }
@@ -72,5 +72,9 @@ public class ItemRegistrar {
                 (Class<T>) clazz,
                 resourceKey
         );
+    }
+
+    private static ResourceLocation creativeTabId(String id) {
+        return id.contains(":") ? ResourceLocation.parse(id) : ResourceLocation.withDefaultNamespace(id);
     }
 }

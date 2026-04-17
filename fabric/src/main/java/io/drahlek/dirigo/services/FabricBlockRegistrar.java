@@ -4,8 +4,8 @@ import io.drahlek.dirigo.services.services.IBlockRegistrar;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -18,9 +18,9 @@ public class FabricBlockRegistrar implements IBlockRegistrar {
     @Override
     public <T extends Block> Supplier<Block> registerBlock(String modId, String name, Class<T> clazz, boolean shouldRegisterItem) {
         // Create a registry key for the block
-        ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(modId, name));
+        ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(modId, name));
         // Create the block properties
-        BlockBehaviour.Properties properties = BlockBehaviour.Properties.of().setId(blockKey);
+        BlockBehaviour.Properties properties = BlockBehaviour.Properties.of();
 
         // Create the Block instance.
         try {
@@ -33,9 +33,9 @@ public class FabricBlockRegistrar implements IBlockRegistrar {
             if (shouldRegisterItem) {
                 // Items need to be registered with a different type of registry key, but the ID
                 // can be the same.
-                ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(modId, name));
+                ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(modId, name));
 
-                BlockItem blockItem = new BlockItem(block, new Item.Properties().setId(itemKey).useBlockDescriptionPrefix());
+                BlockItem blockItem = new BlockItem(block, new Item.Properties());
                 Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem);
             }
 

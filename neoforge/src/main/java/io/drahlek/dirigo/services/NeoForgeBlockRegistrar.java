@@ -36,8 +36,7 @@ public class NeoForgeBlockRegistrar implements IBlockRegistrar {
         DeferredRegister.Items items = getOrCreateItemRegistry(modId);
 
         DeferredBlock<T> deferredBlock = blocks.register(name, registryName -> {
-            ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, registryName);
-            BlockBehaviour.Properties properties = BlockBehaviour.Properties.of().setId(blockKey);
+            BlockBehaviour.Properties properties = BlockBehaviour.Properties.of();
             try {
                 return clazz
                         .getDeclaredConstructor(BlockBehaviour.Properties.class)
@@ -49,8 +48,7 @@ public class NeoForgeBlockRegistrar implements IBlockRegistrar {
 
         if (shouldRegisterItem) {
             items.register(name, registryName -> {
-                ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, registryName);
-                return new BlockItem(deferredBlock.get(), new Item.Properties().setId(itemKey).useBlockDescriptionPrefix());
+                return new BlockItem(deferredBlock.get(), new Item.Properties());
             });
         }
 
