@@ -145,6 +145,7 @@ public abstract class Config<T> {
 
     public final void reload(MinecraftServer server) {
         load(server);
+        syncToPlayers(server);
     }
 
     public final ConfigPayload toPayload() {

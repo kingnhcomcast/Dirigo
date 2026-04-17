@@ -19,9 +19,9 @@ import io.drahlek.dirigo.annotation.CommandArgumentType;
 import io.drahlek.dirigo.config.Config;
 import io.drahlek.dirigo.config.ConfigFieldUtil;
 import io.drahlek.dirigo.permissions.PermissionHelper;
+import io.drahlek.dirigo.services.Services;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import org.reflections.Reflections;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -73,10 +73,10 @@ public class CommandRegistrar {
 
     private static Set<Class<?>> collectCommandClasses(String packageName) {
         Set<Class<?>> commandClasses = new LinkedHashSet<>();
-        commandClasses.addAll(new Reflections(packageName).getTypesAnnotatedWith(Command.class));
+        commandClasses.addAll(Services.CLASS_DISCOVERY.getTypesAnnotatedWith(packageName, Command.class));
 
         if (!DIRIGO_COMMAND_PACKAGE.equals(packageName)) {
-            commandClasses.addAll(new Reflections(DIRIGO_COMMAND_PACKAGE).getTypesAnnotatedWith(Command.class));
+            commandClasses.addAll(Services.CLASS_DISCOVERY.getTypesAnnotatedWith(DIRIGO_COMMAND_PACKAGE, Command.class));
         }
 
         return commandClasses;
