@@ -37,6 +37,10 @@ dependencies {
 
     compileOnly("com.terraformersmc:modmenu:18.0.0-alpha.7") { exclude(module: "fabric-api") }
     compileOnly "me.shedaniel.cloth:cloth-config-fabric:26.1.154"
+    implementation "org.reflections:reflections:${reflections_version}"
+    include "org.reflections:reflections:${reflections_version}"
+    include "org.javassist:javassist:3.28.0-GA"
+    include "com.google.code.findbugs:jsr305:3.0.2"
 
     compileOnly "org.projectlombok:lombok:1.18.44"
     annotationProcessor "org.projectlombok:lombok:1.18.44"

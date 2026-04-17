@@ -19,8 +19,8 @@
 
 ## 🔗 Used By
 
-* CinderStride – Walk on lava with temporary basalt paths  
-* HearthGuard – Mobs fear campfires  
+* [CinderStride](https://modrinth.com/project/cinderstride) – Walk on lava with temporary basalt paths  
+* [HearthGuard](https://modrinth.com/mod/hearthguard) – Mobs fear campfires  
 
 More mods will depend on Dirigo over time.
 

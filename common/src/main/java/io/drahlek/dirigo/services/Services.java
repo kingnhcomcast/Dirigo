@@ -2,6 +2,7 @@ package io.drahlek.dirigo.services;
 
 import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.services.services.IBlockRegistrar;
+import io.drahlek.dirigo.services.services.IClassDiscoveryService;
 import io.drahlek.dirigo.services.services.IItemRegistrar;
 import io.drahlek.dirigo.services.services.IPlatformHelper;
 
@@ -19,6 +20,7 @@ public class Services {
     public static final IPlatformHelper PLATFORM = load(IPlatformHelper.class);
     public static final IItemRegistrar ITEM_REGISTRAR = load(IItemRegistrar.class);
     public static final IBlockRegistrar BLOCK_REGISTRAR = load(IBlockRegistrar.class);
+    public static final IClassDiscoveryService CLASS_DISCOVERY = load(IClassDiscoveryService.class);
     public static final INetworkService NETWORK_SERVICE = load(INetworkService.class);
 
     // This code is used to load a service for the current environment. Your implementation of the service must be defined
