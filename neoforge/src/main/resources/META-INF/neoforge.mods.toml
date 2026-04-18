@@ -31,7 +31,7 @@ license = "${license}" # Review your options at https://choosealicense.com/.
 [[dependencies.${mod_id}]]
     modId = "cloth_config"
     type="optional"
-    versionRange = "[21.11.153,)"
+    versionRange = "[15.0.140,)"
     ordering = "AFTER"
     side = "CLIENT"
 
