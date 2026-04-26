@@ -3,11 +3,12 @@ package io.drahlek.dirigo.services;
 import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.services.services.IBlockRegistrar;
 import io.drahlek.dirigo.services.services.IClassDiscoveryService;
+import io.drahlek.dirigo.services.services.IDataComponentRegistrar;
 import io.drahlek.dirigo.services.services.IItemRegistrar;
 import io.drahlek.dirigo.services.services.IPlatformHelper;
 
-import java.util.ServiceLoader;
 import java.util.Optional;
+import java.util.ServiceLoader;
 
 // Service loaders are a built-in Java feature that allow us to locate implementations of an interface that vary from one
 // environment to another. In the context of MultiLoader we use this feature to access a mock API in the common code that
@@ -22,6 +23,7 @@ public class Services {
     public static final IBlockRegistrar BLOCK_REGISTRAR = load(IBlockRegistrar.class);
     public static final IClassDiscoveryService CLASS_DISCOVERY = load(IClassDiscoveryService.class);
     public static final INetworkService NETWORK_SERVICE = load(INetworkService.class);
+    public static final IDataComponentRegistrar DATA_COMPONENT_REGISTRAR = load(IDataComponentRegistrar.class);
 
     // This code is used to load a service for the current environment. Your implementation of the service must be defined
     // manually by including a text file in META-INF/services named with the fully qualified class name of the service.
