@@ -40,16 +40,10 @@ public class ItemRegistrar {
                             ? clazz.getSimpleName().toLowerCase()
                             : annotation.id();
 
-                    //if a creative tab was provided, add it
-                    ResourceKey<CreativeModeTab> resourceKey;
-                    if (!annotation.creativeTab().isEmpty()) {
-                        resourceKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace(annotation.creativeTab()));
-                    } else {
-                        resourceKey = null;
-                    }
+                    ResourceKey<CreativeModeTab> creativeTab = resolveCreativeTab(annotation.creativeTab());
 
                     // Register in the Minecraft registries
-                    registerItem(itemRegistrar, modId, id, clazz, resourceKey);
+                    registerItem(itemRegistrar, modId, id, clazz, creativeTab);
                     System.out.println("Registered item: " + modId + ":" + id);
                 }
             } catch (Exception e) {
@@ -58,19 +52,35 @@ public class ItemRegistrar {
         }
     }
 
+    private static ResourceKey<CreativeModeTab> resolveCreativeTab(String creativeTabId) {
+        if (creativeTabId == null || creativeTabId.isBlank()) {
+            return null;
+        }
+
+        Identifier tabId;
+        if (creativeTabId.contains(":")) {
+            String[] parts = creativeTabId.split(":", 2);
+            tabId = Identifier.fromNamespaceAndPath(parts[0], parts[1]);
+        } else {
+            tabId = Identifier.withDefaultNamespace(creativeTabId);
+        }
+
+        return ResourceKey.create(Registries.CREATIVE_MODE_TAB, tabId);
+    }
+
     @SuppressWarnings("unchecked")
     private static <T extends net.minecraft.world.item.Item> void registerItem(
             IItemRegistrar itemRegistrar,
             String modId,
             String id,
             Class<?> clazz,
-            ResourceKey<CreativeModeTab> resourceKey
+            ResourceKey<CreativeModeTab> creativeModeTabResourceKey
     ) {
         itemRegistrar.registerItem(
                 modId,
                 id,
                 (Class<T>) clazz,
-                resourceKey
+                creativeModeTabResourceKey
         );
     }
 }
