@@ -1,2 +1,4 @@
+- data generation!!!!!  https://docs.fabricmc.net/develop/data-generation/setup
 - make sure scheduled events persist (not really used yet)
 - auto add /help (show all commands)
+- replace reflections with a compile time processor to reduce jar size

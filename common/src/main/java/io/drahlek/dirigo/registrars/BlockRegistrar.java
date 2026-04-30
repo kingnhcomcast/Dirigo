@@ -2,7 +2,9 @@ package io.drahlek.dirigo.registrars;
 
 import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.annotation.Block;
+import io.drahlek.dirigo.blockentity.BlockEntityTypeCompat;
 import io.drahlek.dirigo.services.Services;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +13,7 @@ import java.util.function.Supplier;
 
 public class BlockRegistrar {
     public static Map<String, Supplier<net.minecraft.world.level.block.Block>> blocks =  new HashMap<>();
+
     /**
      * Scans the given package for classes annotated with @Block
      * and registers them with Minecraft automatically.
@@ -23,7 +26,7 @@ public class BlockRegistrar {
         Set<Class<?>> blockClasses = Services.CLASS_DISCOVERY.getTypesAnnotatedWith(packageName, Block.class);
 
         for (Class<?> clazz : blockClasses) {
-            // Must extend Minecraft's Item class
+            // Must extend Minecraft's Block class
             if (!net.minecraft.world.level.block.Block.class.isAssignableFrom(clazz)) {
                 Constants.LOG.warn("Failed to register block {} not an Block subclass", clazz.getSimpleName());
                 continue;
@@ -41,16 +44,11 @@ public class BlockRegistrar {
                             ? clazz.getSimpleName().toLowerCase()
                             : annotation.id();
 
-                    //if a creative tab was provided, add it
-//                    ResourceKey<CreativeModeTab> resourceKey;
-//                    if (!annotation.creativeTab().isEmpty()) {
-//                        resourceKey = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace(annotation.creativeTab()));
-//                    } else {
-//                        resourceKey = null;
-//                    }
-
                     // Register in the Minecraft registries
-                    blocks.put(annotation.id(), Services.BLOCK_REGISTRAR.registerBlock(modId, id, blockClass, annotation.registerItem()));
+                    Supplier<net.minecraft.world.level.block.Block> blockSupplier =
+                            Services.BLOCK_REGISTRAR.registerBlock(modId, id, blockClass, annotation.registerItem());
+                    blocks.put(id, blockSupplier);
+                    registerBlockEntityCompat(modId, id, annotation.validBlockEntityTypes(), blockSupplier);
 
                     System.out.println("Registered block: " + modId + ":" + id);
                 }
@@ -58,5 +56,39 @@ public class BlockRegistrar {
                 Constants.LOG.error("Failed to register block {}", clazz.getName(), e);
             }
         }
+    }
+
+    private static void registerBlockEntityCompat(
+            String modId,
+            String blockId,
+            String[] blockEntityTypeIds,
+            Supplier<net.minecraft.world.level.block.Block> blockSupplier
+    ) {
+        for (String rawBlockEntityTypeId : blockEntityTypeIds) {
+            try {
+                BlockEntityTypeCompat.addValidBlock(resolveIdentifier(modId, rawBlockEntityTypeId), blockSupplier);
+            } catch (Exception e) {
+                Constants.LOG.error(
+                        "Failed to register block entity compatibility {} -> {}:{}",
+                        rawBlockEntityTypeId,
+                        modId,
+                        blockId,
+                        e
+                );
+            }
+        }
+    }
+
+    private static ResourceLocation resolveIdentifier(String modId, String rawId) {
+        if (rawId == null || rawId.isBlank()) {
+            throw new IllegalArgumentException("Registry id must not be blank");
+        }
+
+        if (!rawId.contains(":")) {
+            return ResourceLocation.fromNamespaceAndPath(modId, rawId);
+        }
+
+        String[] parts = rawId.split(":", 2);
+        return ResourceLocation.fromNamespaceAndPath(parts[0], parts[1]);
     }
 }
