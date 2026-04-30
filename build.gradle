@@ -1,4 +1,5 @@
 plugins {
+    id 'base'
     // see https://fabricmc.net/develop/ for new versions
     id 'net.fabricmc.fabric-loom' version '1.15-SNAPSHOT' apply false
     // see https://projects.neoforged.net/neoforged/moddevgradle for new versions
@@ -21,5 +22,29 @@ tasks.configureEach { task ->
     if (task instanceof Copy || task instanceof AbstractArchiveTask) {
         task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
+}
+
+def subprojectLifecycleTasks = { String taskName ->
+    subprojects.collect { "${it.path}:${taskName}" }
+}
+
+tasks.named('assemble') {
+    description = 'Assembles all Dirigo subprojects.'
+    dependsOn(subprojectLifecycleTasks('assemble'))
+}
+
+tasks.named('check') {
+    description = 'Runs checks for all Dirigo subprojects.'
+    dependsOn(subprojectLifecycleTasks('check'))
+}
+
+tasks.named('build') {
+    description = 'Builds all Dirigo subprojects.'
+    dependsOn(subprojectLifecycleTasks('build'))
+}
+
+tasks.named('clean') {
+    description = 'Cleans all Dirigo subprojects.'
+    dependsOn(subprojectLifecycleTasks('clean'))
 }
 
