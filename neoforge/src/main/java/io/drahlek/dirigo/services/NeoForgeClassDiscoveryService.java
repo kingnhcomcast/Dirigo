@@ -7,6 +7,7 @@ import net.neoforged.neoforgespi.language.ModFileScanData;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -43,6 +44,23 @@ public class NeoForgeClassDiscoveryService implements IClassDiscoveryService {
         return methods;
     }
 
+    @Override
+    public Set<Field> getFieldsAnnotatedWith(String packageName, Class<? extends Annotation> annotationType) {
+        Set<Field> fields = new LinkedHashSet<>();
+        for (ModFileScanData scanData : ModList.get().getAllScanData()) {
+            scanData.getAnnotatedBy(annotationType, ElementType.FIELD)
+                    .filter(annotationData -> isInPackage(annotationData.clazz().getClassName(), packageName))
+                    .forEach(annotationData -> addAnnotatedFields(fields, annotationData, annotationType));
+            scanData.getClasses().stream()
+                    .map(classData -> classData.clazz().getClassName())
+                    .filter(className -> isInPackage(className, packageName))
+                    .map(this::loadClass)
+                    .filter(clazz -> clazz != null)
+                    .forEach(clazz -> addAnnotatedFields(fields, clazz, annotationType));
+        }
+        return fields;
+    }
+
     private void addAnnotatedMethods(
             Set<Method> methods,
             ModFileScanData.AnnotationData annotationData,
@@ -68,6 +86,35 @@ public class NeoForgeClassDiscoveryService implements IClassDiscoveryService {
         for (Method method : clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(annotationType)) {
                 methods.add(method);
+            }
+        }
+    }
+
+    private void addAnnotatedFields(
+            Set<Field> fields,
+            ModFileScanData.AnnotationData annotationData,
+            Class<? extends Annotation> annotationType
+    ) {
+        Class<?> clazz = loadClass(annotationData.clazz().getClassName());
+        if (clazz == null) {
+            return;
+        }
+        String memberName = annotationData.memberName();
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.getName().equals(memberName) && field.isAnnotationPresent(annotationType)) {
+                fields.add(field);
+            }
+        }
+    }
+
+    private void addAnnotatedFields(
+            Set<Field> fields,
+            Class<?> clazz,
+            Class<? extends Annotation> annotationType
+    ) {
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.isAnnotationPresent(annotationType)) {
+                fields.add(field);
             }
         }
     }

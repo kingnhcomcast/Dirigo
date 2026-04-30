@@ -11,4 +11,12 @@ public @interface Block {
     String id() default ""; // optional registry ID
     String creativeTab() default "";
     boolean registerItem() default true;
+
+    /**
+     * Extra block entity types this block should be treated as valid for.
+     * <p>
+     * Values without a namespace are resolved against the owning mod id. Use a fully qualified id
+     * for vanilla or cross-mod block entity types, for example {@code "minecraft:campfire"}.
+     */
+    String[] validBlockEntityTypes() default {};
 }

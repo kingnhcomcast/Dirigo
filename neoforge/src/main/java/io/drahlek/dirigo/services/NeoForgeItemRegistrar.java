@@ -3,7 +3,6 @@ package io.drahlek.dirigo.services;
 import io.drahlek.dirigo.services.services.IItemRegistrar;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -30,7 +29,7 @@ public class NeoForgeItemRegistrar implements IItemRegistrar {
     }
 
     @Override
-    public <T extends Item> void registerItem(String modId, String name, Class<T> clazz, ResourceKey<CreativeModeTab> resourceKey) {
+    public <T extends Item> void registerItem(String modId, String name, Class<T> clazz, ResourceKey<CreativeModeTab> creativeModeTabResourceKey) {
         DeferredRegister.Items items = getOrCreateRegistry(modId);
         DeferredItem<Item> deferredItem = items.registerItem(name, properties -> {
             try {
@@ -45,8 +44,9 @@ public class NeoForgeItemRegistrar implements IItemRegistrar {
                 throw new RuntimeException("Failed to instantiate item: " + clazz.getName(), e);
             }
         });
-        ResourceKey<CreativeModeTab> tab = resourceKey != null ? resourceKey : CreativeModeTabs.COMBAT;
-        TAB_ITEMS.computeIfAbsent(tab, key -> new ArrayList<>()).add(deferredItem);
+        if (creativeModeTabResourceKey != null) {
+            TAB_ITEMS.computeIfAbsent(creativeModeTabResourceKey, key -> new ArrayList<>()).add(deferredItem);
+        }
     }
 
     private static DeferredRegister.Items getOrCreateRegistry(String modId) {

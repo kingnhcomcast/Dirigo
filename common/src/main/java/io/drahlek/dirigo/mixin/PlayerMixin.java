@@ -25,7 +25,7 @@ public abstract class PlayerMixin {
             return;
         }
 
-        if (player.noPhysics || player.isPassenger() || !player.onGround() || player.isSleeping()) {
+        if (player.noPhysics || player.isPassenger() || player.isSleeping()) {
             return;
         }
 
