@@ -23,28 +23,3 @@ tasks.configureEach { task ->
         task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
 }
-
-def subprojectLifecycleTasks = { String taskName ->
-    subprojects.collect { "${it.path}:${taskName}" }
-}
-
-tasks.named('assemble') {
-    description = 'Assembles all Dirigo subprojects.'
-    dependsOn(subprojectLifecycleTasks('assemble'))
-}
-
-tasks.named('check') {
-    description = 'Runs checks for all Dirigo subprojects.'
-    dependsOn(subprojectLifecycleTasks('check'))
-}
-
-tasks.named('build') {
-    description = 'Builds all Dirigo subprojects.'
-    dependsOn(subprojectLifecycleTasks('build'))
-}
-
-tasks.named('clean') {
-    description = 'Cleans all Dirigo subprojects.'
-    dependsOn(subprojectLifecycleTasks('clean'))
-}
-
