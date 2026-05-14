@@ -9,24 +9,23 @@ import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public class NeoForgeMenuTypeRegistrar implements IMenuTypeRegistrar {
-    private static final Map<String, DeferredRegister<MenuType<?>>> REGISTRIES = new HashMap<>();
-    private static final Set<String> INITIALIZED_MODS = new HashSet<>();
+    private static final Map<String, DeferredRegister<MenuType<?>>> REGISTRIES = new ConcurrentHashMap<>();
+    private static final Set<String> INITIALIZED_MODS = ConcurrentHashMap.newKeySet();
 
-    public void initialize(IEventBus eventBus, String modId) {
+    public synchronized void initialize(IEventBus eventBus, String modId) {
         if (INITIALIZED_MODS.add(modId)) {
             getOrCreateRegistry(modId).register(eventBus);
         }
     }
 
     @Override
-    public <T extends AbstractContainerMenu> Supplier<MenuType<T>> registerMenuType(
+    public synchronized <T extends AbstractContainerMenu> Supplier<MenuType<T>> registerMenuType(
             String modId,
             String name,
             MenuFactory<T> factory

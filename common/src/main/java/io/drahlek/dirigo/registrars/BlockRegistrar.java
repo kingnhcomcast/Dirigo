@@ -8,15 +8,15 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import static io.drahlek.dirigo.registrars.ItemRegistrar.resolveCreativeTab;
 
 public class BlockRegistrar {
-    public static Map<String, Supplier<net.minecraft.world.level.block.Block>> blocks =  new HashMap<>();
+    public static final Map<String, Supplier<net.minecraft.world.level.block.Block>> blocks = new ConcurrentHashMap<>();
 
     /**
      * Scans the given package for classes annotated with @Block

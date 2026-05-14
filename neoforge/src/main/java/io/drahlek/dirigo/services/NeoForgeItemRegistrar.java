@@ -10,26 +10,30 @@ import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NeoForgeItemRegistrar implements IItemRegistrar {
-    private static final Map<String, DeferredRegister.Items> ITEM_REGISTRIES = new HashMap<>();
-    private static final Map<ResourceKey<CreativeModeTab>, List<DeferredItem<Item>>> TAB_ITEMS = new HashMap<>();
-    private static boolean creativeTabListenerRegistered = false;
+    private static final Map<String, DeferredRegister.Items> ITEM_REGISTRIES = new ConcurrentHashMap<>();
+    private static final Set<String> INITIALIZED_MODS = ConcurrentHashMap.newKeySet();
+    private static final Map<ResourceKey<CreativeModeTab>, List<DeferredItem<Item>>> TAB_ITEMS = new ConcurrentHashMap<>();
+    private static final AtomicBoolean CREATIVE_TAB_LISTENER_REGISTERED = new AtomicBoolean();
 
-    public void initialize(IEventBus eventBus, String modId) {
-        getOrCreateRegistry(modId).register(eventBus);
-        if (!creativeTabListenerRegistered) {
+    public synchronized void initialize(IEventBus eventBus, String modId) {
+        if (INITIALIZED_MODS.add(modId)) {
+            getOrCreateRegistry(modId).register(eventBus);
+        }
+        if (CREATIVE_TAB_LISTENER_REGISTERED.compareAndSet(false, true)) {
             eventBus.addListener(NeoForgeItemRegistrar::buildContents);
-            creativeTabListenerRegistered = true;
         }
     }
 
     @Override
-    public <T extends Item> void registerItem(String modId, String name, Class<T> clazz, ResourceKey<CreativeModeTab> creativeModeTabResourceKey) {
+    public synchronized <T extends Item> void registerItem(String modId, String name, Class<T> clazz, ResourceKey<CreativeModeTab> creativeModeTabResourceKey) {
         DeferredRegister.Items items = getOrCreateRegistry(modId);
         DeferredItem<Item> deferredItem = items.registerItem(name, properties -> {
             try {
@@ -45,7 +49,7 @@ public class NeoForgeItemRegistrar implements IItemRegistrar {
             }
         });
         if (creativeModeTabResourceKey != null) {
-            TAB_ITEMS.computeIfAbsent(creativeModeTabResourceKey, key -> new ArrayList<>()).add(deferredItem);
+            TAB_ITEMS.computeIfAbsent(creativeModeTabResourceKey, key -> new CopyOnWriteArrayList<>()).add(deferredItem);
         }
     }
 

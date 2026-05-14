@@ -16,34 +16,33 @@ import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 public class NeoForgeBlockRegistrar implements IBlockRegistrar {
-    private static final Map<String, DeferredRegister.Blocks> BLOCK_REGISTRIES = new HashMap<>();
-    private static final Map<String, DeferredRegister.Items> ITEM_REGISTRIES = new HashMap<>();
-    private static final Set<String> INITIALIZED_MODS = new HashSet<>();
-    private static final Map<ResourceKey<CreativeModeTab>, List<DeferredItem<Item>>> TAB_ITEMS = new HashMap<>();
-    private static boolean creativeTabListenerRegistered = false;
+    private static final Map<String, DeferredRegister.Blocks> BLOCK_REGISTRIES = new ConcurrentHashMap<>();
+    private static final Map<String, DeferredRegister.Items> ITEM_REGISTRIES = new ConcurrentHashMap<>();
+    private static final Set<String> INITIALIZED_MODS = ConcurrentHashMap.newKeySet();
+    private static final Map<ResourceKey<CreativeModeTab>, List<DeferredItem<Item>>> TAB_ITEMS = new ConcurrentHashMap<>();
+    private static final AtomicBoolean CREATIVE_TAB_LISTENER_REGISTERED = new AtomicBoolean();
 
-    public void initialize(IEventBus eventBus, String modId) {
+    public synchronized void initialize(IEventBus eventBus, String modId) {
         if (INITIALIZED_MODS.add(modId)) {
             getOrCreateBlockRegistry(modId).register(eventBus);
             getOrCreateItemRegistry(modId).register(eventBus);
         }
-        if (!creativeTabListenerRegistered) {
+        if (CREATIVE_TAB_LISTENER_REGISTERED.compareAndSet(false, true)) {
             eventBus.addListener(NeoForgeBlockRegistrar::buildContents);
-            creativeTabListenerRegistered = true;
         }
     }
 
     @Override
-    public <T extends Block> Supplier<Block> registerBlock(String modId, String name, Class<T> clazz, boolean shouldRegisterItem, ResourceKey<CreativeModeTab> creativeModeTabResourceKey) {
+    public synchronized <T extends Block> Supplier<Block> registerBlock(String modId, String name, Class<T> clazz, boolean shouldRegisterItem, ResourceKey<CreativeModeTab> creativeModeTabResourceKey) {
         DeferredRegister.Blocks blocks = getOrCreateBlockRegistry(modId);
         DeferredRegister.Items items = getOrCreateItemRegistry(modId);
 
@@ -66,7 +65,7 @@ public class NeoForgeBlockRegistrar implements IBlockRegistrar {
             });
 
             if (creativeModeTabResourceKey != null) {
-                TAB_ITEMS.computeIfAbsent(creativeModeTabResourceKey, key -> new ArrayList<>()).add(deferredItem);
+                TAB_ITEMS.computeIfAbsent(creativeModeTabResourceKey, key -> new CopyOnWriteArrayList<>()).add(deferredItem);
             }
         }
 

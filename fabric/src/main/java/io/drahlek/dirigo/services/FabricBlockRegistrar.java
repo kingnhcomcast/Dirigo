@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 
 public class FabricBlockRegistrar implements IBlockRegistrar {
     @Override
-    public <T extends Block> Supplier<Block> registerBlock(String modId, String name, Class<T> clazz, boolean shouldRegisterItem, ResourceKey<CreativeModeTab> creativeTab) {
+    public synchronized <T extends Block> Supplier<Block> registerBlock(String modId, String name, Class<T> clazz, boolean shouldRegisterItem, ResourceKey<CreativeModeTab> creativeTab) {
         // Create a registry key for the block
         ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(modId, name));
         // Create the block properties

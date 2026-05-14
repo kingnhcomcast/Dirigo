@@ -15,7 +15,7 @@ import java.util.function.Supplier;
 
 public class FabricMenuTypeRegistrar implements IMenuTypeRegistrar {
     @Override
-    public <T extends AbstractContainerMenu> Supplier<MenuType<T>> registerMenuType(
+    public synchronized <T extends AbstractContainerMenu> Supplier<MenuType<T>> registerMenuType(
             String modId,
             String name,
             MenuFactory<T> factory
