@@ -59,6 +59,7 @@ public final class EventScheduler {
     public static final EventScheduler INSTANCE = new EventScheduler();
 
     private final NavigableMap<Long, List<Runnable>> tasks = new TreeMap<>();
+    private final Object tasksLock = new Object();
 
     private EventScheduler() {}
 
@@ -77,24 +78,30 @@ public final class EventScheduler {
         }
 
         long executeAt = server.getTickCount() + ticks;
-        tasks.computeIfAbsent(executeAt, k -> new ArrayList<>()).add(callback);
+        synchronized (tasksLock) {
+            tasks.computeIfAbsent(executeAt, k -> new ArrayList<>()).add(callback);
+        }
     }
 
     public void onServerTick(MinecraftServer server) {
         long now = server.getTickCount();
-        NavigableMap<Long, List<Runnable>> due = tasks.headMap(now, true);
+        List<Runnable> dueTasks = new ArrayList<>();
 
-        for (List<Runnable> list : new ArrayList<>(due.values())) {
-            for (Runnable task : list) {
-                try {
-                    task.run();
-                } catch (Exception e) {
-                    Constants.LOG.warn("Error while running callback", e);
-                }
+        synchronized (tasksLock) {
+            NavigableMap<Long, List<Runnable>> due = tasks.headMap(now, true);
+            for (List<Runnable> list : due.values()) {
+                dueTasks.addAll(list);
             }
+            due.clear();
         }
 
-        due.clear();
+        for (Runnable task : dueTasks) {
+            try {
+                task.run();
+            } catch (Exception e) {
+                Constants.LOG.warn("Error while running callback", e);
+            }
+        }
     }
 
 }

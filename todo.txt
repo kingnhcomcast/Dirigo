@@ -2,3 +2,6 @@
 - make sure scheduled events persist (not really used yet)
 - auto add /help (show all commands)
 - replace reflections with a compile time processor to reduce jar size
+- refactor item registration, there is duplicate code in blockRegistrar and ItemREgistrar.  maybe instead of reigsiterItem in block, just add separate Item annotation as well. Also duplicate creative tab, add @CreativeTab
+- data generation
+- config class could be a generic

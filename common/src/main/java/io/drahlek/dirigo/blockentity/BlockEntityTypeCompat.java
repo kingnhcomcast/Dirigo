@@ -6,11 +6,11 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Supplier;
 
 /**
@@ -27,7 +27,7 @@ import java.util.function.Supplier;
  * the methods here directly only when the mapping needs to be decided dynamically at runtime.
  */
 public final class BlockEntityTypeCompat {
-    private static final Map<Identifier, List<Supplier<? extends Block>>> EXTRA_VALID_BLOCKS = new HashMap<>();
+    private static final Map<Identifier, List<Supplier<? extends Block>>> EXTRA_VALID_BLOCKS = new ConcurrentHashMap<>();
 
     private BlockEntityTypeCompat() {
     }
@@ -57,7 +57,7 @@ public final class BlockEntityTypeCompat {
     public static void addValidBlock(Identifier blockEntityTypeId, Supplier<? extends Block> blockSupplier) {
         Objects.requireNonNull(blockEntityTypeId, "blockEntityTypeId");
         Objects.requireNonNull(blockSupplier, "blockSupplier");
-        EXTRA_VALID_BLOCKS.computeIfAbsent(blockEntityTypeId, ignored -> new ArrayList<>()).add(blockSupplier);
+        EXTRA_VALID_BLOCKS.computeIfAbsent(blockEntityTypeId, ignored -> new CopyOnWriteArrayList<>()).add(blockSupplier);
     }
 
     /**
