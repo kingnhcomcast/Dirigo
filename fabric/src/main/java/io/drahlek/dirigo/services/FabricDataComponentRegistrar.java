@@ -11,7 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public class FabricDataComponentRegistrar implements IDataComponentRegistrar {
     @Override
-    public <T> DataComponentType<T> register(String namespace, String path, Codec<T> codec, StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec, boolean persistent, boolean networkSynchronized) {
+    public synchronized <T> DataComponentType<T> register(String namespace, String path, Codec<T> codec, StreamCodec<? super RegistryFriendlyByteBuf, T> streamCodec, boolean persistent, boolean networkSynchronized) {
         DataComponentType.Builder<T> builder = DataComponentType.builder();
 
         if (persistent) {

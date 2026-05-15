@@ -52,7 +52,7 @@ public class ItemRegistrar {
         }
     }
 
-    private static ResourceKey<CreativeModeTab> resolveCreativeTab(String creativeTabId) {
+    static ResourceKey<CreativeModeTab> resolveCreativeTab(String creativeTabId) {
         if (creativeTabId == null || creativeTabId.isBlank()) {
             return null;
         }

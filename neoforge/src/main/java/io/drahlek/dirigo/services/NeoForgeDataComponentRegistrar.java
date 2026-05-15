@@ -10,17 +10,16 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class NeoForgeDataComponentRegistrar implements IDataComponentRegistrar {
-    private static final Map<String, DeferredRegister.DataComponents> DATA_COMPONENT_REGISTRIES = new HashMap<>();
-    private static final Set<String> INITIALIZED_MODS = new HashSet<>();
+    private static final Map<String, DeferredRegister.DataComponents> DATA_COMPONENT_REGISTRIES = new ConcurrentHashMap<>();
+    private static final Set<String> INITIALIZED_MODS = ConcurrentHashMap.newKeySet();
 
     @Override
-    public <T> DataComponentType<T> register(
+    public synchronized <T> DataComponentType<T> register(
             String namespace,
             String path,
             Codec<T> codec,
@@ -54,12 +53,9 @@ public class NeoForgeDataComponentRegistrar implements IDataComponentRegistrar {
     }
 
     private static void initialize(String modId, DeferredRegister.DataComponents registry) {
-        if (INITIALIZED_MODS.contains(modId)) {
-            return;
+        if (INITIALIZED_MODS.add(modId)) {
+            registry.register(resolveEventBus(modId));
         }
-
-        registry.register(resolveEventBus(modId));
-        INITIALIZED_MODS.add(modId);
     }
 
     private static IEventBus resolveEventBus(String modId) {

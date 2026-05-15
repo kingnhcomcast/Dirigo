@@ -5,14 +5,18 @@ import io.drahlek.dirigo.annotation.Block;
 import io.drahlek.dirigo.blockentity.BlockEntityTypeCompat;
 import io.drahlek.dirigo.services.Services;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.CreativeModeTab;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import static io.drahlek.dirigo.registrars.ItemRegistrar.resolveCreativeTab;
+
 public class BlockRegistrar {
-    public static Map<String, Supplier<net.minecraft.world.level.block.Block>> blocks =  new HashMap<>();
+    public static final Map<String, Supplier<net.minecraft.world.level.block.Block>> blocks = new ConcurrentHashMap<>();
 
     /**
      * Scans the given package for classes annotated with @Block
@@ -44,13 +48,15 @@ public class BlockRegistrar {
                             ? clazz.getSimpleName().toLowerCase()
                             : annotation.id();
 
+                    ResourceKey<CreativeModeTab> creativeTab = resolveCreativeTab(annotation.creativeTab());
+
                     // Register in the Minecraft registries
                     Supplier<net.minecraft.world.level.block.Block> blockSupplier =
-                            Services.BLOCK_REGISTRAR.registerBlock(modId, id, blockClass, annotation.registerItem());
+                            Services.BLOCK_REGISTRAR.registerBlock(modId, id, blockClass, annotation.registerItem(), creativeTab);
                     blocks.put(id, blockSupplier);
                     registerBlockEntityCompat(modId, id, annotation.validBlockEntityTypes(), blockSupplier);
 
-                    System.out.println("Registered block: " + modId + ":" + id);
+                    Constants.LOG.info("Registered block: {} : {}", modId, id);
                 }
             } catch (Exception e) {
                 Constants.LOG.error("Failed to register block {}", clazz.getName(), e);
