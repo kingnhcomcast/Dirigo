@@ -1,4 +1,4 @@
-<div style="display:flex; justify-content:center;">
+<div align="center">
 <img src="https://github.com/kingnhcomcast/Dirigo/blob/26.1/media/dirigo_banner.png?raw=true" style="height:128px; width:auto;"/>
 </div>
 
