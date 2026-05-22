@@ -2,6 +2,7 @@ package io.drahlek.dirigo.services;
 
 import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.services.services.IBlockRegistrar;
+import io.drahlek.dirigo.services.services.IBlockEntityTypeRegistrar;
 import io.drahlek.dirigo.services.services.IClassDiscoveryService;
 import io.drahlek.dirigo.services.services.IDataComponentRegistrar;
 import io.drahlek.dirigo.services.services.IItemRegistrar;
@@ -22,6 +23,7 @@ public class Services {
     public static final IPlatformHelper PLATFORM = load(IPlatformHelper.class);
     public static final IItemRegistrar ITEM_REGISTRAR = load(IItemRegistrar.class);
     public static final IBlockRegistrar BLOCK_REGISTRAR = load(IBlockRegistrar.class);
+    public static final IBlockEntityTypeRegistrar BLOCK_ENTITY_TYPE_REGISTRAR = load(IBlockEntityTypeRegistrar.class);
     public static final IClassDiscoveryService CLASS_DISCOVERY = load(IClassDiscoveryService.class);
     public static final INetworkService NETWORK_SERVICE = load(INetworkService.class);
     public static final IDataComponentRegistrar DATA_COMPONENT_REGISTRAR = load(IDataComponentRegistrar.class);

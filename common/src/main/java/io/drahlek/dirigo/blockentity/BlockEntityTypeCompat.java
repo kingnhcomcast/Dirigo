@@ -6,7 +6,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +27,7 @@ import java.util.function.Supplier;
  * the methods here directly only when the mapping needs to be decided dynamically at runtime.
  */
 public final class BlockEntityTypeCompat {
-    private static final Map<ResourceLocation, List<Supplier<? extends Block>>> EXTRA_VALID_BLOCKS = new HashMap<>();
+    private static final Map<ResourceLocation, List<Supplier<? extends Block>>> EXTRA_VALID_BLOCKS = new ConcurrentHashMap<>();
 
     private BlockEntityTypeCompat() {
     }
