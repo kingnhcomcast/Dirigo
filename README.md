@@ -15,7 +15,7 @@ Provides a multi-loader abstraction layer to assist in developing mods for Fabri
 <tr>
 <td valign="top" width="140" style="min-width:140px;">
 <a href="https://modrinth.com/project/cinderstride">
-<img src="https://media.forgecdn.net/avatars/thumbnails/1760/578/64/64/639119930036380407.png" width="128" height="128"/>
+<img src="https://cdn.modrinth.com/data/rZcOAbbe/11b494acecf531275f57bc3e58d9bc5fb74961ab.png" width="128" height="128"/>
 </a>
 </td>
 <td valign="top">

@@ -1,3 +1,5 @@
+- cache class discovery. Fabric creates new Reflections scans per registrar in FabricClassDiscoveryService.java; NeoForge iterates scan data repeatedly in NeoForgeClassDiscoveryService.java. This is not a TPS hot path, but it can slow large modpack startup.
+- optimize BlockEntityTypeCompat.isValid() in BlockEntityTypeCompat.java. It does registry lookup and supplier iteration after every failed BlockEntityType.isValid. Prefer direct BlockEntityType<?> -> Set<Block> mapping after registration.
 - make sure scheduled events persist (not really used yet)
 - auto add /help (show all commands)
 - refactor item registration, there is duplicate code in blockRegistrar and ItemREgistrar.  maybe instead of reigsiterItem in block, just add separate Item annotation as well. Also duplicate creative tab, add @CreativeTab
