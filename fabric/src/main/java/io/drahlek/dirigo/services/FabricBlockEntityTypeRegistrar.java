@@ -1,7 +1,6 @@
 package io.drahlek.dirigo.services;
 
 import io.drahlek.dirigo.services.services.IBlockEntityTypeRegistrar;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -19,8 +18,8 @@ public class FabricBlockEntityTypeRegistrar implements IBlockEntityTypeRegistrar
     ) {
         BlockEntityType<T> type = Registry.register(
                 BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                ResourceLocation.fromNamespaceAndPath(modId, name),
-                FabricBlockEntityTypeBuilder.create(factory::create).build()
+                new ResourceLocation(modId, name),
+                BlockEntityType.Builder.of(factory::create).build(null)
         );
         return () -> type;
     }

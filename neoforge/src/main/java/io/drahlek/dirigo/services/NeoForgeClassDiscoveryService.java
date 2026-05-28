@@ -2,8 +2,8 @@ package io.drahlek.dirigo.services;
 
 import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.services.services.IClassDiscoveryService;
-import net.neoforged.fml.ModList;
-import net.neoforged.neoforgespi.language.ModFileScanData;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.forgespi.language.ModFileScanData;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -11,13 +11,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public class NeoForgeClassDiscoveryService implements IClassDiscoveryService {
     @Override
     public Set<Class<?>> getTypesAnnotatedWith(String packageName, Class<? extends Annotation> annotationType) {
         Set<Class<?>> classes = new LinkedHashSet<>();
         for (ModFileScanData scanData : ModList.get().getAllScanData()) {
-            scanData.getAnnotatedBy(annotationType, ElementType.TYPE)
+            annotations(scanData, annotationType, ElementType.TYPE)
                     .map(annotationData -> annotationData.clazz().getClassName())
                     .filter(className -> isInPackage(className, packageName))
                     .map(this::loadClass)
@@ -31,7 +32,7 @@ public class NeoForgeClassDiscoveryService implements IClassDiscoveryService {
     public Set<Method> getMethodsAnnotatedWith(String packageName, Class<? extends Annotation> annotationType) {
         Set<Method> methods = new LinkedHashSet<>();
         for (ModFileScanData scanData : ModList.get().getAllScanData()) {
-            scanData.getAnnotatedBy(annotationType, ElementType.METHOD)
+            annotations(scanData, annotationType, ElementType.METHOD)
                     .filter(annotationData -> isInPackage(annotationData.clazz().getClassName(), packageName))
                     .forEach(annotationData -> addAnnotatedMethods(methods, annotationData, annotationType));
             scanData.getClasses().stream()
@@ -48,7 +49,7 @@ public class NeoForgeClassDiscoveryService implements IClassDiscoveryService {
     public Set<Field> getFieldsAnnotatedWith(String packageName, Class<? extends Annotation> annotationType) {
         Set<Field> fields = new LinkedHashSet<>();
         for (ModFileScanData scanData : ModList.get().getAllScanData()) {
-            scanData.getAnnotatedBy(annotationType, ElementType.FIELD)
+            annotations(scanData, annotationType, ElementType.FIELD)
                     .filter(annotationData -> isInPackage(annotationData.clazz().getClassName(), packageName))
                     .forEach(annotationData -> addAnnotatedFields(fields, annotationData, annotationType));
             scanData.getClasses().stream()
@@ -61,11 +62,17 @@ public class NeoForgeClassDiscoveryService implements IClassDiscoveryService {
         return fields;
     }
 
-    private void addAnnotatedMethods(
-            Set<Method> methods,
-            ModFileScanData.AnnotationData annotationData,
-            Class<? extends Annotation> annotationType
+    private static Stream<ModFileScanData.AnnotationData> annotations(
+            ModFileScanData scanData,
+            Class<? extends Annotation> annotationType,
+            ElementType targetType
     ) {
+        return scanData.getAnnotations().stream()
+                .filter(annotationData -> annotationData.targetType() == targetType)
+                .filter(annotationData -> annotationData.annotationType().getClassName().equals(annotationType.getName()));
+    }
+
+    private void addAnnotatedMethods(Set<Method> methods, ModFileScanData.AnnotationData annotationData, Class<? extends Annotation> annotationType) {
         Class<?> clazz = loadClass(annotationData.clazz().getClassName());
         if (clazz == null) {
             return;
@@ -78,11 +85,7 @@ public class NeoForgeClassDiscoveryService implements IClassDiscoveryService {
         }
     }
 
-    private void addAnnotatedMethods(
-            Set<Method> methods,
-            Class<?> clazz,
-            Class<? extends Annotation> annotationType
-    ) {
+    private void addAnnotatedMethods(Set<Method> methods, Class<?> clazz, Class<? extends Annotation> annotationType) {
         for (Method method : clazz.getDeclaredMethods()) {
             if (method.isAnnotationPresent(annotationType)) {
                 methods.add(method);
@@ -90,11 +93,7 @@ public class NeoForgeClassDiscoveryService implements IClassDiscoveryService {
         }
     }
 
-    private void addAnnotatedFields(
-            Set<Field> fields,
-            ModFileScanData.AnnotationData annotationData,
-            Class<? extends Annotation> annotationType
-    ) {
+    private void addAnnotatedFields(Set<Field> fields, ModFileScanData.AnnotationData annotationData, Class<? extends Annotation> annotationType) {
         Class<?> clazz = loadClass(annotationData.clazz().getClassName());
         if (clazz == null) {
             return;
@@ -107,11 +106,7 @@ public class NeoForgeClassDiscoveryService implements IClassDiscoveryService {
         }
     }
 
-    private void addAnnotatedFields(
-            Set<Field> fields,
-            Class<?> clazz,
-            Class<? extends Annotation> annotationType
-    ) {
+    private void addAnnotatedFields(Set<Field> fields, Class<?> clazz, Class<? extends Annotation> annotationType) {
         for (Field field : clazz.getDeclaredFields()) {
             if (field.isAnnotationPresent(annotationType)) {
                 fields.add(field);

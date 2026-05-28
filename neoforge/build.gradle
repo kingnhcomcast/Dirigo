@@ -1,13 +1,12 @@
 plugins {
     id 'multiloader-loader'
-    id 'net.neoforged.moddev'
+    id 'net.neoforged.moddev.legacyforge'
 }
 
 sourceSets {
     client {
         java.srcDir 'src/client/java'
         resources.srcDir 'src/client/resources'
-        // Inherit everything from main so you can see your Common code
         compileClasspath += sourceSets.main.runtimeClasspath
         runtimeClasspath += sourceSets.main.runtimeClasspath
     }
@@ -24,9 +23,11 @@ configurations {
     }
 }
 
-neoForge {
-    version = neoforge_version
-    // Automatically enable neoforge AccessTransformers if the file exists
+legacyForge {
+    enable {
+        neoForgeVersion = neoforge_version
+        enabledSourceSets = [sourceSets.main, sourceSets.client] as Set
+    }
     def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
     if (at.exists()) {
         accessTransformers.from(at.absolutePath)
@@ -37,17 +38,14 @@ neoForge {
     }
     runs {
         configureEach {
-            systemProperty('neoforge.enabledGameTestNamespaces', mod_id)
-            ideName = "NeoForge ${it.name.capitalize()} (${project.path})" // Unify the run config names with fabric
+            systemProperty('forge.enabledGameTestNamespaces', mod_id)
+            ideName = "NeoForge ${it.name.capitalize()} (${project.path})"
         }
         client {
             client()
         }
         data {
             data()
-
-            // DataGen can be run by - "./gradlew :neoforge:runData" in Terminal.
-            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
             programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
         server {
@@ -76,14 +74,11 @@ dependencies {
     commonClientJava project(path: ':common', configuration: 'commonClientJava')
     commonClientResources project(path: ':common', configuration: 'commonClientResources')
 
-    clientCompileOnly "me.shedaniel.cloth:cloth-config-neoforge:21.11.153"
+    clientCompileOnly "me.shedaniel.cloth:cloth-config-forge:11.1.136"
     compileOnly "org.projectlombok:lombok:1.18.44"
     annotationProcessor "org.projectlombok:lombok:1.18.44"
-    // common is wired in via multiloader-loader with the correct attributes
 }
 
-
-// Implement mcgradleconventions loader attribute
 def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)
 ['apiElements', 'runtimeElements', 'sourcesElements', 'javadocElements'].each { variant ->
     configurations.named("$variant") {
@@ -104,13 +99,20 @@ sourceSets.configureEach {
 
 def replaceProperties = [
         mod_id: mod_id,
-        mod_name: mod_name
+        mod_name: mod_name,
+        version: version,
+        license: license,
+        credits: credits,
+        mod_author: mod_author,
+        description: description,
+        minecraft_version_range_neoforge: minecraft_version_range_neoforge,
+        neoforge_loader_version_range: neoforge_loader_version_range
 ]
 
 processResources {
     inputs.properties replaceProperties
 
-    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
+    filesMatching(['META-INF/mods.toml', 'META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
         expand replaceProperties
     }
 }
@@ -125,4 +127,3 @@ tasks.named('processClientResources') {
     from(configurations.commonClientResources)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
-

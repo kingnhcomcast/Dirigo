@@ -1,13 +1,13 @@
 package io.drahlek.dirigo.services;
 
 import io.drahlek.dirigo.services.services.IMenuTypeRegistrar;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraftforge.common.extensions.IForgeMenuType;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 import java.util.Map;
 import java.util.Set;
@@ -30,12 +30,12 @@ public class NeoForgeMenuTypeRegistrar implements IMenuTypeRegistrar {
             String name,
             MenuFactory<T> factory
     ) {
-        DeferredHolder<MenuType<?>, MenuType<T>> holder = getOrCreateRegistry(modId)
-                .register(name, () -> IMenuTypeExtension.create((containerId, inventory, data) -> factory.create(containerId, inventory)));
+        RegistryObject<MenuType<T>> holder = getOrCreateRegistry(modId)
+                .register(name, () -> IForgeMenuType.create((containerId, inventory, data) -> factory.create(containerId, inventory)));
         return holder::get;
     }
 
     private static DeferredRegister<MenuType<?>> getOrCreateRegistry(String modId) {
-        return REGISTRIES.computeIfAbsent(modId, id -> DeferredRegister.create(Registries.MENU, id));
+        return REGISTRIES.computeIfAbsent(modId, id -> DeferredRegister.create(ForgeRegistries.MENU_TYPES, id));
     }
 }

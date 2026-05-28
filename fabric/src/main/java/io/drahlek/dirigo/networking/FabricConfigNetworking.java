@@ -5,26 +5,22 @@ import io.drahlek.dirigo.config.Config;
 import io.drahlek.dirigo.config.ConfigPayload;
 import io.drahlek.dirigo.permissions.PermissionHelper;
 import io.drahlek.dirigo.services.Services;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 public class FabricConfigNetworking {
     public static void init() {
-        //register payloads
-        PayloadTypeRegistry.playC2S().register(ConfigPayload.ID, ConfigPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(ConfigPayload.ID, ConfigPayload.CODEC);
-
-        ServerPlayNetworking.registerGlobalReceiver(ConfigPayload.ID, (payload, context) -> {
-            context.server().execute(() -> {
-                if (!PermissionHelper.canModifyConfig(context.player())) {
-                    Constants.LOG.warn("Config sync: denied update from {}", context.player().getName().getString());
+        ServerPlayNetworking.registerGlobalReceiver(ConfigPayload.UPDATE_CONFIG_ID, (server, player, handler, buffer, responseSender) -> {
+            ConfigPayload payload = ConfigPayload.read(buffer);
+            server.execute(() -> {
+                if (!PermissionHelper.canModifyConfig(player)) {
+                    Constants.LOG.warn("Config sync: denied update from {}", player.getName().getString());
                     return;
                 }
 
                 Config.applyPayload(payload);
                 Config.getRegistered(payload.modId())
-                        .ifPresent(config -> config.save(context.server()));
+                        .ifPresent(config -> config.save(server));
             });
         });
 

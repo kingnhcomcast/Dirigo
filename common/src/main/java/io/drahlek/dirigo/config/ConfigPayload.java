@@ -1,30 +1,19 @@
 package io.drahlek.dirigo.config;
 
-import com.google.gson.Gson;
 import io.drahlek.dirigo.Constants;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-public record ConfigPayload(String modId, String json) implements CustomPacketPayload {
+public record ConfigPayload(String modId, String json) {
     public static final ResourceLocation UPDATE_CONFIG_ID =
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "update_config");
+            new ResourceLocation(Constants.MOD_ID, "update_config");
 
-    public static final CustomPacketPayload.Type<ConfigPayload> ID = new CustomPacketPayload.Type<>(UPDATE_CONFIG_ID);
+    public void write(FriendlyByteBuf buffer) {
+        buffer.writeUtf(modId);
+        buffer.writeUtf(json);
+    }
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, ConfigPayload> CODEC =
-            StreamCodec.composite(
-                    ByteBufCodecs.STRING_UTF8,
-                    ConfigPayload::modId,
-                    ByteBufCodecs.STRING_UTF8,
-                    ConfigPayload::json,
-                    ConfigPayload::new
-            );
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return ID;
+    public static ConfigPayload read(FriendlyByteBuf buffer) {
+        return new ConfigPayload(buffer.readUtf(), buffer.readUtf());
     }
 }

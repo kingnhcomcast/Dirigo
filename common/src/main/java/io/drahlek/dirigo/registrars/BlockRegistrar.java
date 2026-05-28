@@ -91,10 +91,10 @@ public class BlockRegistrar {
         }
 
         if (!rawId.contains(":")) {
-            return ResourceLocation.fromNamespaceAndPath(modId, rawId);
+            return new ResourceLocation(modId, rawId);
         }
 
         String[] parts = rawId.split(":", 2);
-        return ResourceLocation.fromNamespaceAndPath(parts[0], parts[1]);
+        return new ResourceLocation(parts[0], parts[1]);
     }
 }

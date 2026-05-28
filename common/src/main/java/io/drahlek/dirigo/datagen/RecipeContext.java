@@ -1,31 +1,24 @@
 package io.drahlek.dirigo.datagen;
 
-import net.minecraft.advancements.Criterion;
 import net.minecraft.advancements.critereon.InventoryChangeTrigger;
 import net.minecraft.advancements.critereon.ItemPredicate;
-import net.minecraft.core.HolderGetter;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeCategory;
-import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.ShapedRecipeBuilder;
 import net.minecraft.data.recipes.ShapelessRecipeBuilder;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.ItemLike;
 
-public record RecipeContext(HolderLookup.Provider registries, RecipeOutput output) {
+import java.util.function.Consumer;
 
-    public HolderGetter<Item> items() {
-        return registries.lookupOrThrow(Registries.ITEM);
-    }
-
-    public Criterion<InventoryChangeTrigger.TriggerInstance> has(ItemLike item) {
+public record RecipeContext(Consumer<FinishedRecipe> output) {
+    public InventoryChangeTrigger.TriggerInstance has(ItemLike item) {
         return InventoryChangeTrigger.TriggerInstance.hasItems(item);
     }
 
-    public Criterion<InventoryChangeTrigger.TriggerInstance> has(TagKey<Item> tag) {
-        return InventoryChangeTrigger.TriggerInstance.hasItems(ItemPredicate.Builder.item().of(tag));
+    public InventoryChangeTrigger.TriggerInstance has(TagKey<Item> tag) {
+        return InventoryChangeTrigger.TriggerInstance.hasItems(ItemPredicate.Builder.item().of(tag).build());
     }
 
     public ShapedRecipeBuilder shaped(RecipeCategory category, ItemLike result) {

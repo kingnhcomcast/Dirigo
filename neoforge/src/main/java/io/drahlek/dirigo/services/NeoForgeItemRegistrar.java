@@ -4,11 +4,12 @@ import io.drahlek.dirigo.services.services.IItemRegistrar;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.registries.DeferredItem;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 import java.util.List;
 import java.util.Map;
@@ -18,9 +19,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class NeoForgeItemRegistrar implements IItemRegistrar {
-    private static final Map<String, DeferredRegister.Items> ITEM_REGISTRIES = new ConcurrentHashMap<>();
+    private static final Map<String, DeferredRegister<Item>> ITEM_REGISTRIES = new ConcurrentHashMap<>();
     private static final Set<String> INITIALIZED_MODS = ConcurrentHashMap.newKeySet();
-    private static final Map<ResourceKey<CreativeModeTab>, List<DeferredItem<Item>>> TAB_ITEMS = new ConcurrentHashMap<>();
+    private static final Map<ResourceKey<CreativeModeTab>, List<RegistryObject<Item>>> TAB_ITEMS = new ConcurrentHashMap<>();
     private static final AtomicBoolean CREATIVE_TAB_LISTENER_REGISTERED = new AtomicBoolean();
 
     public synchronized void initialize(IEventBus eventBus, String modId) {
@@ -34,10 +35,9 @@ public class NeoForgeItemRegistrar implements IItemRegistrar {
 
     @Override
     public synchronized <T extends Item> void registerItem(String modId, String name, Class<T> clazz, ResourceKey<CreativeModeTab> creativeModeTabResourceKey) {
-        DeferredRegister.Items items = getOrCreateRegistry(modId);
-        DeferredItem<Item> deferredItem = items.registerItem(name, properties -> {
+        RegistryObject<Item> deferredItem = getOrCreateRegistry(modId).register(name, () -> {
             try {
-                return clazz.getDeclaredConstructor(Item.Properties.class).newInstance(properties);
+                return clazz.getDeclaredConstructor(Item.Properties.class).newInstance(new Item.Properties());
             } catch (NoSuchMethodException ignored) {
                 try {
                     return clazz.getDeclaredConstructor().newInstance();
@@ -53,15 +53,15 @@ public class NeoForgeItemRegistrar implements IItemRegistrar {
         }
     }
 
-    private static DeferredRegister.Items getOrCreateRegistry(String modId) {
-        return ITEM_REGISTRIES.computeIfAbsent(modId, DeferredRegister::createItems);
+    private static DeferredRegister<Item> getOrCreateRegistry(String modId) {
+        return ITEM_REGISTRIES.computeIfAbsent(modId, id -> DeferredRegister.create(ForgeRegistries.ITEMS, id));
     }
 
-    @SubscribeEvent // on the mod event bus
+    @SubscribeEvent
     public static void buildContents(BuildCreativeModeTabContentsEvent event) {
-        List<DeferredItem<Item>> tabItems = TAB_ITEMS.get(event.getTabKey());
+        List<RegistryObject<Item>> tabItems = TAB_ITEMS.get(event.getTabKey());
         if (tabItems != null) {
-            tabItems.forEach(event::accept);
+            tabItems.forEach(item -> event.accept(item.get()));
         }
     }
 }

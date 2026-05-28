@@ -19,7 +19,7 @@ public class FabricMenuTypeRegistrar implements IMenuTypeRegistrar {
     ) {
         MenuType<T> type = Registry.register(
                 BuiltInRegistries.MENU,
-                ResourceLocation.fromNamespaceAndPath(modId, name),
+                new ResourceLocation(modId, name),
                 createType(factory)
         );
         return () -> type;

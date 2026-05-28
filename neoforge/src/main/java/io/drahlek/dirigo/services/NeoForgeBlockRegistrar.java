@@ -7,12 +7,12 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.registries.DeferredBlock;
-import net.neoforged.neoforge.registries.DeferredItem;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
@@ -24,10 +24,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 public class NeoForgeBlockRegistrar implements IBlockRegistrar {
-    private static final Map<String, DeferredRegister.Blocks> BLOCK_REGISTRIES = new ConcurrentHashMap<>();
-    private static final Map<String, DeferredRegister.Items> ITEM_REGISTRIES = new ConcurrentHashMap<>();
+    private static final Map<String, DeferredRegister<Block>> BLOCK_REGISTRIES = new ConcurrentHashMap<>();
+    private static final Map<String, DeferredRegister<Item>> ITEM_REGISTRIES = new ConcurrentHashMap<>();
     private static final Set<String> INITIALIZED_MODS = ConcurrentHashMap.newKeySet();
-    private static final Map<ResourceKey<CreativeModeTab>, List<DeferredItem<Item>>> TAB_ITEMS = new ConcurrentHashMap<>();
+    private static final Map<ResourceKey<CreativeModeTab>, List<RegistryObject<Item>>> TAB_ITEMS = new ConcurrentHashMap<>();
     private static final AtomicBoolean CREATIVE_TAB_LISTENER_REGISTERED = new AtomicBoolean();
 
     public synchronized void initialize(IEventBus eventBus, String modId) {
@@ -42,10 +42,7 @@ public class NeoForgeBlockRegistrar implements IBlockRegistrar {
 
     @Override
     public synchronized <T extends Block> Supplier<Block> registerBlock(String modId, String name, Class<T> clazz, boolean shouldRegisterItem, ResourceKey<CreativeModeTab> creativeModeTabResourceKey) {
-        DeferredRegister.Blocks blocks = getOrCreateBlockRegistry(modId);
-        DeferredRegister.Items items = getOrCreateItemRegistry(modId);
-
-        DeferredBlock<T> deferredBlock = blocks.register(name, registryName -> {
+        RegistryObject<T> deferredBlock = getOrCreateBlockRegistry(modId).register(name, () -> {
             BlockBehaviour.Properties properties = BlockBehaviour.Properties.of();
             try {
                 return clazz
@@ -57,9 +54,8 @@ public class NeoForgeBlockRegistrar implements IBlockRegistrar {
         });
 
         if (shouldRegisterItem) {
-            DeferredItem<Item> deferredItem = items.register(name, registryName -> {
-                return new BlockItem(deferredBlock.get(), new Item.Properties());
-            });
+            RegistryObject<Item> deferredItem = getOrCreateItemRegistry(modId).register(name, () ->
+                    new BlockItem(deferredBlock.get(), new Item.Properties()));
 
             if (creativeModeTabResourceKey != null) {
                 TAB_ITEMS.computeIfAbsent(creativeModeTabResourceKey, key -> new CopyOnWriteArrayList<>()).add(deferredItem);
@@ -69,19 +65,19 @@ public class NeoForgeBlockRegistrar implements IBlockRegistrar {
         return deferredBlock::get;
     }
 
-    private static DeferredRegister.Blocks getOrCreateBlockRegistry(String modId) {
-        return BLOCK_REGISTRIES.computeIfAbsent(modId, DeferredRegister::createBlocks);
+    private static DeferredRegister<Block> getOrCreateBlockRegistry(String modId) {
+        return BLOCK_REGISTRIES.computeIfAbsent(modId, id -> DeferredRegister.create(ForgeRegistries.BLOCKS, id));
     }
 
-    private static DeferredRegister.Items getOrCreateItemRegistry(String modId) {
-        return ITEM_REGISTRIES.computeIfAbsent(modId, DeferredRegister::createItems);
+    private static DeferredRegister<Item> getOrCreateItemRegistry(String modId) {
+        return ITEM_REGISTRIES.computeIfAbsent(modId, id -> DeferredRegister.create(ForgeRegistries.ITEMS, id));
     }
 
-    @SubscribeEvent // on the mod event bus
+    @SubscribeEvent
     public static void buildContents(BuildCreativeModeTabContentsEvent event) {
-        List<DeferredItem<Item>> tabItems = TAB_ITEMS.get(event.getTabKey());
+        List<RegistryObject<Item>> tabItems = TAB_ITEMS.get(event.getTabKey());
         if (tabItems != null) {
-            tabItems.forEach(event::accept);
+            tabItems.forEach(item -> event.accept(item.get()));
         }
     }
 }

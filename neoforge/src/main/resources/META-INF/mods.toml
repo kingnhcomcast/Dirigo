@@ -1,0 +1,23 @@
+modLoader = "javafml"
+loaderVersion = "${neoforge_loader_version_range}"
+license = "${license}"
+
+[[mods]]
+    modId = "${mod_id}"
+    version = "${version}"
+    displayName = "${mod_name}"
+    credits="${credits}"
+    authors = "${mod_author}"
+    description = '''${description}'''
+[[dependencies.${mod_id}]]
+    modId = "forge"
+    mandatory = true
+    versionRange = "[47.1.106,)"
+    ordering = "NONE"
+    side = "BOTH"
+[[dependencies.${mod_id}]]
+    modId = "minecraft"
+    mandatory = true
+    versionRange = "${minecraft_version_range_neoforge}"
+    ordering = "NONE"
+    side = "BOTH"

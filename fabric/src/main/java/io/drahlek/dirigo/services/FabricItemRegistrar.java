@@ -14,28 +14,19 @@ import net.minecraft.world.item.Item.Properties;
 import java.lang.reflect.InvocationTargetException;
 
 public class FabricItemRegistrar implements IItemRegistrar {
-    //TODO do we add a custom creative tab just for this mod?
-
     @Override
     public synchronized <T extends Item> void registerItem(String modId, String name, Class<T> clazz, ResourceKey<CreativeModeTab> creativeModeTabResourceKey) {
-        // Create the item key.
-        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(modId, name));
+        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, new ResourceLocation(modId, name));
 
-        // Set the item id before constructing the item (required by Item.Properties).
         try {
             Properties properties = new Properties();
-
-            // Create the item instance.
             T item = clazz
                     .getDeclaredConstructor(Properties.class)
                     .newInstance(properties);
 
-            // Register the item.
-            //TODO do i need to save the key?
             Registry.register(BuiltInRegistries.ITEM, itemKey, item);
 
-            // Add to the configured creative tab, if one was provided.
-            if(creativeModeTabResourceKey != null) {
+            if (creativeModeTabResourceKey != null) {
                 ItemGroupEvents.modifyEntriesEvent(creativeModeTabResourceKey)
                         .register((entries) -> {
                             entries.getDisplayStacks().add(item.getDefaultInstance());

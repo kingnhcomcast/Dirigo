@@ -5,38 +5,62 @@ import io.drahlek.dirigo.config.Config;
 import io.drahlek.dirigo.config.ConfigPayload;
 import io.drahlek.dirigo.permissions.PermissionHelper;
 import io.drahlek.dirigo.services.Services;
-import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
+
+import java.util.Optional;
+import java.util.function.Supplier;
 
 public class NeoForgeConfigNetworking {
-    public static void registerPayloads(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar(Constants.MOD_ID);
-        registrar.playBidirectional(
-                ConfigPayload.ID,
-                ConfigPayload.CODEC,
-                (payload, context) -> context.enqueueWork(() -> {
-                    if (context.flow() == PacketFlow.CLIENTBOUND) {
-                        Config.applyPayload(payload);
-                        return;
-                    }
+    private static final String PROTOCOL_VERSION = "1";
+    public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
+            ConfigPayload.UPDATE_CONFIG_ID,
+            () -> PROTOCOL_VERSION,
+            PROTOCOL_VERSION::equals,
+            PROTOCOL_VERSION::equals
+    );
 
-                    if (!(context.player() instanceof ServerPlayer serverPlayer)) {
-                        return;
-                    }
+    public static void registerPayloads() {
+        CHANNEL.messageBuilder(ConfigPayload.class, 0, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ConfigPayload::write)
+                .decoder(ConfigPayload::read)
+                .consumerMainThread(NeoForgeConfigNetworking::handleServerbound)
+                .add();
+        CHANNEL.messageBuilder(ConfigPayload.class, 1, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(ConfigPayload::write)
+                .decoder(ConfigPayload::read)
+                .consumerMainThread(NeoForgeConfigNetworking::handleClientbound)
+                .add();
+    }
 
-                    if (!PermissionHelper.canModifyConfig(serverPlayer)) {
-                        Constants.LOG.warn("Config sync: denied update from {}", serverPlayer.getName().getString());
-                        return;
-                    }
+    private static void handleClientbound(ConfigPayload payload, Supplier<NetworkEvent.Context> contextSupplier) {
+        NetworkEvent.Context context = contextSupplier.get();
+        Config.applyPayload(payload);
+        context.setPacketHandled(true);
+    }
 
-                    Config.applyPayload(payload);
-                    Config.getRegistered(payload.modId())
-                            .ifPresent(config -> config.save(serverPlayer.level().getServer()));
-                })
-        );
+    private static void handleServerbound(ConfigPayload payload, Supplier<NetworkEvent.Context> contextSupplier) {
+        NetworkEvent.Context context = contextSupplier.get();
+        ServerPlayer serverPlayer = context.getSender();
+        if (serverPlayer == null) {
+            context.setPacketHandled(true);
+            return;
+        }
+
+        if (!PermissionHelper.canModifyConfig(serverPlayer)) {
+            Constants.LOG.warn("Config sync: denied update from {}", serverPlayer.getName().getString());
+            context.setPacketHandled(true);
+            return;
+        }
+
+        Config.applyPayload(payload);
+        Config.getRegistered(payload.modId())
+                .ifPresent(config -> config.save(serverPlayer.level().getServer()));
+        context.setPacketHandled(true);
     }
 
     public static void syncConfigsOnJoin(PlayerEvent.PlayerLoggedInEvent event) {

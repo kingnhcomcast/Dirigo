@@ -5,10 +5,8 @@ import io.drahlek.dirigo.config.Config;
 import io.drahlek.dirigo.config.ConfigFieldUtil;
 import io.drahlek.dirigo.services.Services;
 import io.drahlek.dirigo.services.services.IConfigScreenRegistrar;
-import net.neoforged.fml.ModList;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
-
-import java.util.function.Supplier;
+import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.fml.ModList;
 
 public final class NeoForgeConfigScreenRegistrar implements IConfigScreenRegistrar {
     @Override
@@ -29,13 +27,15 @@ public final class NeoForgeConfigScreenRegistrar implements IConfigScreenRegistr
         ModList.get()
                 .getModContainerById(config.getModId())
                 .ifPresent(container -> {
-                    if (container.getCustomExtension(IConfigScreenFactory.class).isPresent()) {
+                    if (container.getCustomExtension(ConfigScreenHandler.ConfigScreenFactory.class).isPresent()) {
                         return;
                     }
 
-                    Supplier<IConfigScreenFactory> factory = () ->
-                            (ignoredContainer, parent) -> GeneratedConfigScreen.create(parent, config);
-                    container.registerExtensionPoint(IConfigScreenFactory.class, factory);
+                    container.registerExtensionPoint(
+                            ConfigScreenHandler.ConfigScreenFactory.class,
+                            () -> new ConfigScreenHandler.ConfigScreenFactory((ignoredMinecraft, parent) ->
+                                    GeneratedConfigScreen.create(parent, config))
+                    );
                 });
     }
 }

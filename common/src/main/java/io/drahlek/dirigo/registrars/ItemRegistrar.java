@@ -60,9 +60,9 @@ public class ItemRegistrar {
         ResourceLocation tabId;
         if (creativeTabId.contains(":")) {
             String[] parts = creativeTabId.split(":", 2);
-            tabId = ResourceLocation.fromNamespaceAndPath(parts[0], parts[1]);
+            tabId = new ResourceLocation(parts[0], parts[1]);
         } else {
-            tabId = ResourceLocation.withDefaultNamespace(creativeTabId);
+            tabId = new ResourceLocation(creativeTabId);
         }
 
         return ResourceKey.create(Registries.CREATIVE_MODE_TAB, tabId);
@@ -85,6 +85,6 @@ public class ItemRegistrar {
     }
 
     private static ResourceLocation creativeTabId(String id) {
-        return id.contains(":") ? ResourceLocation.parse(id) : ResourceLocation.withDefaultNamespace(id);
+        return id.contains(":") ? new ResourceLocation(id) : new ResourceLocation(id);
     }
 }

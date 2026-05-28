@@ -3,25 +3,25 @@ package io.drahlek.dirigo.datagen;
 import io.drahlek.dirigo.Constants;
 import io.drahlek.dirigo.annotation.Recipe;
 import io.drahlek.dirigo.services.Services;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.data.recipes.RecipeOutput;
+import net.minecraft.data.recipes.FinishedRecipe;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Comparator;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public final class RecipeRegistrar {
     private RecipeRegistrar() {
     }
 
-    public static void buildRecipes(String packageName, HolderLookup.Provider registries, RecipeOutput output) {
-        invokeRecipes(Services.CLASS_DISCOVERY.getMethodsAnnotatedWith(packageName, Recipe.class), registries, output);
+    public static void buildRecipes(String packageName, Consumer<FinishedRecipe> output) {
+        invokeRecipes(Services.CLASS_DISCOVERY.getMethodsAnnotatedWith(packageName, Recipe.class), output);
     }
 
-    private static void invokeRecipes(Set<Method> methods, HolderLookup.Provider registries, RecipeOutput output) {
-        RecipeContext context = new RecipeContext(registries, output);
+    private static void invokeRecipes(Set<Method> methods, Consumer<FinishedRecipe> output) {
+        RecipeContext context = new RecipeContext(output);
         methods.stream()
                 .sorted(Comparator.comparing(method -> method.getDeclaringClass().getName() + "#" + method.getName()))
                 .forEach(method -> invokeRecipe(method, context));

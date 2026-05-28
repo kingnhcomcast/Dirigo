@@ -1,12 +1,12 @@
 package io.drahlek.dirigo.services;
 
 import io.drahlek.dirigo.services.services.IBlockEntityTypeRegistrar;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 import java.util.Map;
 import java.util.Set;
@@ -29,13 +29,13 @@ public class NeoForgeBlockEntityTypeRegistrar implements IBlockEntityTypeRegistr
             String name,
             BlockEntityFactory<T> factory
     ) {
-        DeferredHolder<BlockEntityType<?>, BlockEntityType<T>> holder = getOrCreateRegistry(modId)
+        RegistryObject<BlockEntityType<T>> holder = getOrCreateRegistry(modId)
                 .register(name, () -> createType(factory));
         return holder::get;
     }
 
     private static DeferredRegister<BlockEntityType<?>> getOrCreateRegistry(String modId) {
-        return REGISTRIES.computeIfAbsent(modId, id -> DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, id));
+        return REGISTRIES.computeIfAbsent(modId, id -> DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, id));
     }
 
     private static <T extends BlockEntity> BlockEntityType<T> createType(BlockEntityFactory<T> factory) {

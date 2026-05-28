@@ -11,8 +11,9 @@ public final class FabricDirigoClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ClientServices.configScreenRegistrar().ifPresent(IConfigScreenRegistrar::initialize);
-        ClientPlayNetworking.registerGlobalReceiver(ConfigPayload.ID, (payload, context) -> {
-            context.client().execute(() -> Config.applyPayload(payload));
+        ClientPlayNetworking.registerGlobalReceiver(ConfigPayload.UPDATE_CONFIG_ID, (client, handler, buffer, responseSender) -> {
+            ConfigPayload payload = ConfigPayload.read(buffer);
+            client.execute(() -> Config.applyPayload(payload));
         });
     }
 }

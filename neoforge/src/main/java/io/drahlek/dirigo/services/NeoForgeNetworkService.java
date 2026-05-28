@@ -1,20 +1,20 @@
 package io.drahlek.dirigo.services;
 
-import io.drahlek.dirigo.Constants;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import io.drahlek.dirigo.config.ConfigPayload;
+import io.drahlek.dirigo.networking.NeoForgeConfigNetworking;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor;
 
 public class NeoForgeNetworkService implements INetworkService {
     @Override
-    public void sendToServer(CustomPacketPayload payload) {
-        PacketDistributor.sendToServer(payload);
+    public void sendToServer(ConfigPayload payload) {
+        NeoForgeConfigNetworking.CHANNEL.sendToServer(payload);
     }
 
     @Override
-    public void sendToClient(ServerPlayer player, CustomPacketPayload payload) {
+    public void sendToClient(ServerPlayer player, ConfigPayload payload) {
         if (player != null) {
-            PacketDistributor.sendToPlayer(player, payload);
+            NeoForgeConfigNetworking.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), payload);
         }
     }
 }
